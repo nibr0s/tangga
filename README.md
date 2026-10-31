@@ -2,8 +2,8 @@
 
 Belajar UTBK-SNBT satu anak tangga kecil setiap hari. Tersedia sebagai **web app** dan **aplikasi Android**, gratis dan tanpa akun.
 
-- 🌐 Web: https://OWNER.github.io/tangga/
-- 📱 Android (APK terbaru): https://github.com/OWNER/tangga/releases/latest/download/tangga.apk
+- 🌐 Web: https://nibr0s.github.io/tangga/
+- 📱 Android (APK terbaru): https://github.com/nibr0s/tangga/releases/latest/download/tangga.apk
 
 ## Cara pasang di Android (untuk teman-teman)
 
