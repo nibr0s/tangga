@@ -1,0 +1,25 @@
+{
+  "name": "tangga",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tangga UTBK — belajar UTBK-SNBT anak tangga demi anak tangga (web + Android).",
+  "scripts": {
+    "copy-core": "node -e \"require('fs').copyFileSync('node_modules/@capacitor/core/dist/capacitor.js','www/capacitor.js')\"",
+    "sync": "npm run copy-core && cap sync android",
+    "assets": "capacitor-assets generate --android --iconBackgroundColor #F4F3EC --iconBackgroundColorDark #14201B --splashBackgroundColor #F4F3EC --splashBackgroundColorDark #14201B",
+    "serve": "npx --yes http-server www -p 8080 -c-1"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/share": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.0"
+  }
+}

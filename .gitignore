@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+# disalin otomatis dari @capacitor/core saat build Android
+www/capacitor.js
+# kunci tanda tangan JANGAN pernah masuk repo
+*.jks
+*.keystore
+*.p12

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tangga UTBK</title>
+<meta name="description" content="Belajar UTBK-SNBT gratis, satu anak tangga kecil setiap hari: materi bertahap, latihan adaptif, kartu kosakata, streak, dan permainan harian.">
+<meta name="theme-color" content="#F4F3EC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14201B" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tangga">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preload" href="fonts/plus-jakarta-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/plus-jakarta-sans-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <header id="top"></header>
+  <main id="main" tabindex="-1"></main>
+  <nav id="nav" aria-label="Navigasi utama"></nav>
+</div>
+<div id="ov" hidden></div>
+<div id="sheet" hidden></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="restore-file" accept=".json,application/json" hidden>
+<noscript><p style="padding:20px">Tangga membutuhkan JavaScript.</p></noscript>
+<script>
+/* Hanya di aplikasi Android: muat inti Capacitor sebelum skrip lain. */
+if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) document.write('<script src="capacitor.js"><\/script>');
+</script>
+<script src="content.js"></script>
+<script src="content2.js"></script>
+<script src="core.js"></script>
+<script src="ui.js"></script>
+<script src="play.js"></script>
+<script src="ai.js"></script>
+<script src="native.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

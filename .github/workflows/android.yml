@@ -1,0 +1,97 @@
+# Membangun aplikasi Android Tangga setiap ada perubahan, lalu menaruh APK di halaman Releases.
+name: Android app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'www/**'
+      - 'android/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Install & copy the web app into the Android project
+        run: |
+          npm ci
+          npm run sync
+
+      - name: Load the signing key (from repository secrets)
+        env:
+          KEYSTORE_B64: ${{ secrets.TANGGA_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/tangga-upload.jks"
+            echo "TANGGA_KEYSTORE=$RUNNER_TEMP/tangga-upload.jks" >> "$GITHUB_ENV"
+            echo "SIGNED=1" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Secret TANGGA_KEYSTORE_BASE64 belum ada — membuat APK uji (debug) saja, tanpa rilis."
+          fi
+
+      - name: Build
+        working-directory: android
+        env:
+          TANGGA_VERSION_CODE: ${{ github.run_number }}
+          TANGGA_KEYSTORE_PASSWORD: ${{ secrets.TANGGA_KEYSTORE_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          if [ "$SIGNED" = "1" ]; then
+            ./gradlew --no-daemon assembleRelease bundleRelease
+          else
+            ./gradlew --no-daemon assembleDebug
+          fi
+
+      - name: Collect the app files
+        run: |
+          mkdir -p dist
+          if [ "$SIGNED" = "1" ]; then
+            cp android/app/build/outputs/apk/release/app-release.apk dist/tangga.apk
+            cp android/app/build/outputs/bundle/release/app-release.aab dist/tangga.aab
+          else
+            cp android/app/build/outputs/apk/debug/app-debug.apk dist/tangga-debug.apk
+          fi
+          ls -la dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: tangga-android-${{ github.run_number }}
+          path: dist/
+          retention-days: 30
+
+      - name: Publish a release (APK for friends, AAB for Google Play)
+        if: env.SIGNED == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v0.1.${{ github.run_number }}"
+          gh release create "$TAG" dist/tangga.apk dist/tangga.aab \
+            --title "Tangga $TAG" \
+            --notes "Pasang di Android: unduh **tangga.apk** lalu buka file-nya. Untuk Google Play: **tangga.aab**." \
+            --latest

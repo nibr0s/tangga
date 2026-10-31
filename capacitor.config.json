@@ -1,0 +1,27 @@
+{
+  "appId": "id.tangga.utbk",
+  "appName": "Tangga",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#F4F3EC",
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 700,
+      "launchAutoHide": true,
+      "launchFadeOutDuration": 200,
+      "backgroundColor": "#F4F3EC",
+      "showSpinner": false
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_tangga",
+      "iconColor": "#2142D3"
+    },
+    "SystemBars": {
+      "insetsHandling": "css",
+      "style": "DEFAULT"
+    }
+  }
+}

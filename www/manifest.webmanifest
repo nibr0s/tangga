@@ -1,0 +1,19 @@
+{
+  "name": "Tangga UTBK",
+  "short_name": "Tangga",
+  "description": "Belajar UTBK-SNBT gratis, satu anak tangga kecil setiap hari.",
+  "lang": "id",
+  "dir": "ltr",
+  "start_url": "./#beranda",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4F3EC",
+  "theme_color": "#F4F3EC",
+  "categories": ["education"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
