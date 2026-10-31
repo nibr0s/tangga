@@ -37,6 +37,9 @@ const IC = {
   eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
   calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   trash: '<path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/>',
+  sound: '<path d="M4 9.5v5h3.5L13 19V5L7.5 9.5z"/><path d="M16.5 9a4 4 0 0 1 0 6M19 6.5a7.5 7.5 0 0 1 0 11"/>',
+  text: '<path d="M3.5 18 8 6l4.5 12M5.2 13.5h5.6"/><path d="M14.5 18l3-8 3 8M15.6 15.3h3.8"/>',
+  warn: '<path d="M12 3.5 21.5 20h-19z"/><path d="M12 10v4.5M12 17.5h.01"/>',
   download: '<path d="M12 4v11M7 10.5l5 5 5-5"/><path d="M4.5 16v3.5h15V16"/>',
   upload: '<path d="M12 15.5V4.5M7 9l5-5 5 5"/><path d="M4.5 16v3.5h15V16"/>',
   phone: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
@@ -95,7 +98,7 @@ function gameTile(g) {
 }
 
 /* ---------- bilah atas & navigasi ---------- */
-const TABS = [['beranda', 'Beranda', 'home'], ['peta', 'Peta', 'stairs'], ['latihan', 'Latihan', 'pencil'], ['kartu', 'Kartu', 'cards'], ['kemajuan', 'Kemajuan', 'chart']];
+const TABS = [['beranda', 'Beranda', 'home'], ['peta', 'Belajar', 'book'], ['latihan', 'Latihan', 'pencil'], ['kartu', 'Kartu', 'cards'], ['kemajuan', 'Kemajuan', 'chart']];
 function renderTop() {
   const el = $('#top');
   if (!S.onboarded) { el.innerHTML = ''; return; }
@@ -176,15 +179,16 @@ function nextCard(key, nid) {
     const allDone = tg.atoms.every((id) => lvl(id) >= 3);
     return `<section class="card next-card" style="--h:${x.hue}"><div class="nc-top"><p class="eyebrow">${x.kode} · ${esc(tg.judul)}</p>${miniStairs(key, null)}</div>
       <h2>${allDone ? 'Tangga ini sudah kamu daki sampai puncak.' : 'Anak tangga berikutnya masih terkunci.'}</h2>
-      <p class="mute">${allDone ? 'Teruskan ulasan agar semuanya naik ke Kuasai, atau pilih tangga lain.' : 'Buka Peta untuk melihat anak tangga mana yang perlu dikuatkan.'}</p>
-      <button class="btn primary big" data-act="tab" data-tab="peta">Buka Peta ${icon('arrow')}</button></section>`;
+      <p class="mute">${allDone ? 'Teruskan ulasan agar semuanya naik ke Kuasai, atau pilih tangga lain.' : 'Buka Belajar untuk melihat anak tangga mana yang perlu dikuatkan.'}</p>
+      <button class="btn primary big" data-act="tab" data-tab="peta">Buka Belajar ${icon('arrow')}</button></section>`;
   }
   const i = tg.atoms.indexOf(nid); const a = ATOM[nid]; const needAI = !lessonOf(nid);
   return `<section class="card next-card" style="--h:${x.hue}">
     <div class="nc-top"><p class="eyebrow">Lanjut belajar · ${x.kode}</p>${miniStairs(key, nid)}</div>
     <h2>${esc(a.judul)}</h2>
     <p class="mute">Anak tangga ${i + 1} dari ${tg.atoms.length} · ${esc(tg.judul)}${needAI ? ' · disusun Kak Tangga' : ''}</p>
-    <button class="btn primary big" data-act="belajar" data-id="${nid}">${lvl(nid) ? 'Lanjutkan' : 'Mulai'} anak tangga ${i + 1} ${icon('arrow')}</button>
+    ${materiOf(nid) && !mtRead(nid) ? `<button class="btn primary big" data-act="materi" data-id="${nid}">${icon('book')} Pelajari dulu (bergambar) ${icon('arrow')}</button><button class="btn ghost sm" data-act="belajar" data-id="${nid}">Sudah paham? Langsung latihan</button>`
+      : `<button class="btn primary big" data-act="belajar" data-id="${nid}">${lvl(nid) ? 'Lanjutkan' : 'Mulai'} anak tangga ${i + 1} ${icon('arrow')}</button>${materiOf(nid) ? `<button class="btn ghost sm" data-act="materi" data-id="${nid}">${icon('book')} Baca materinya lagi</button>` : ''}`}
   </section>`;
 }
 function scoreCard(pt, gap, dl) {
@@ -239,6 +243,7 @@ function vPeta() {
       ${isSub ? `<div>${sr ? dotsView(sr) : '<b>—</b>'}<span>penilaian diri</span></div>` : ''}
     </div>
   </section>
+  ${mtCard(key)}
   <div class="stairs-wrap">
     <p class="summit">${icon('flag')} Puncak</p>
     <ol class="stairs">${steps}</ol>
@@ -252,13 +257,20 @@ function vPeta() {
   h += `<p class="small mute legend"><b>Level:</b> Belajar → Kenal (3 dari 4 latihan benar) → <b>Cakap</b> (lolos “Buktikan”, membuka anak tangga berikutnya) → Kuasai (lolos ulasan sehari dan seminggu kemudian).</p></div>`;
   return h;
 }
+function mtCard(key) {
+  const ids = TANGGA[key].atoms.filter((id) => materiOf(id)); if (!ids.length) return '';
+  const read = ids.filter(mtRead).length; const next = ids.find((id) => !mtRead(id)) || ids[0]; const i = TANGGA[key].atoms.indexOf(next);
+  return `<section class="card mt-card"><div class="sec-h"><h3>${icon('book')} Materi bergambar</h3><span class="mute small">${read}/${ids.length} dibaca</span></div>
+    <p class="small">Pelajaran dari nol sampai soal sulit: gambar di tiap halaman, kata sulit bisa diketuk, ada soal tantangan dan cara tutor menjawabnya.</p>
+    <button class="btn primary" data-act="materi" data-id="${next}">${read && read < ids.length ? 'Lanjut baca' : read ? 'Baca lagi dari' : 'Mulai dari'} anak tangga ${i + 1}: ${esc(ATOM[next].judul)} ${icon('arrow')}</button></section>`;
+}
 function stepHTML(id, i, dx, nid) {
   const a = ATOM[id]; const L = lvl(id); const open = isOpen(id); const r = S.atom[id];
   const due = r && r.lvl >= 3 && r.due && r.due <= today(); const cur = id === nid;
   return `<li class="step lv${L}${open ? '' : ' locked'}${cur ? ' cur' : ''}" style="margin-left:${(i * dx).toFixed(2)}%">
     <button class="step-b" data-act="atom" data-id="${id}">
       <span class="st-n">${i + 1}</span>
-      <span class="st-body"><span class="st-t">${esc(a.judul)}</span><span class="st-l">${open ? LEVEL[L] : 'Terkunci'}${due ? ' · ulasan hari ini' : ''}${!a.L ? ' · AI' : ''}</span></span>
+      <span class="st-body"><span class="st-t">${esc(a.judul)}</span><span class="st-l">${open ? LEVEL[L] : 'Terkunci'}${materiOf(id) ? (mtRead(id) ? ' · materi dibaca' : ' · materi bergambar') : ''}${due ? ' · ulasan hari ini' : ''}${!a.L ? ' · AI' : ''}</span></span>
       ${open ? meterHTML(L) : icon('lock')}
     </button>
     ${cur ? '<span class="here" aria-hidden="true">kamu di sini</span>' : ''}
@@ -270,12 +282,13 @@ function shAtom(id) {
   const due = r.lvl >= 3 && r.due && r.due <= today();
   const pra = a.pra.map((p) => `<li><span>${esc(ATOM[p].judul)}</span><span class="lvl-pill lv${lvl(p)}">${LEVEL[lvl(p)]}</span></li>`).join('');
   const canLompat = !!(lessonOf(id) && qsOf(id).u.length >= 2);
-  let act = '';
+  let act = ''; const mt = materiOf(id);
+  const mtBtn = (pri) => mt ? `<button class="btn${pri ? ' primary big' : ''}" data-act="materi" data-id="${id}">${icon('book')} ${mtRead(id) ? 'Baca materi lagi' : 'Pelajari materi bergambar'} <small class="btn-sub">${mt.pages.length} halaman · ±${mtMenit(mt)} menit</small></button>` : '';
   if (!open) {
-    act = `<p class="note">${icon('lock')} Terkunci. Capai level <b>Cakap</b> di anak tangga di bawahnya dulu — anak tangga ini dibangun di atasnya.</p>`;
+    act = `<p class="note">${icon('lock')} Latihannya terkunci. Capai level <b>Cakap</b> di anak tangga di bawahnya dulu — anak tangga ini dibangun di atasnya. Materinya boleh kamu baca kapan saja.</p>` + mtBtn(false);
     if (canLompat) act += `<button class="btn" data-act="lompat" data-id="${id}">Sudah bisa? Uji lompat (3 soal)</button>`;
   } else {
-    act = `<button class="btn primary big" data-act="belajar" data-id="${id}">${L >= 3 ? 'Belajar ulang' : L > 0 ? 'Lanjutkan belajar' : 'Mulai belajar'} ${icon('arrow')}</button>`;
+    act = mtBtn(!mtRead(id) && L < 3) + `<button class="btn${mt && (mtRead(id) || L >= 3) ? ' primary big' : mt ? '' : ' primary big'}" data-act="belajar" data-id="${id}">${icon('pencil')} ${L >= 3 ? 'Latihan ulang' : L > 0 ? 'Lanjutkan latihan' : 'Latihan anak tangga'} ${icon('arrow')}</button>`;
     if (due) act += `<button class="btn" data-act="ulasan" data-id="${id}">${icon('refresh')} Ulasan sekarang</button>`;
   }
   if (AI.ok) act += `<button class="btn ghost" data-act="chat" data-ctx="${id}">${icon('spark')} Tanya Kak Tangga tentang ini</button>`;

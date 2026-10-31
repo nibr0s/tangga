@@ -52,13 +52,13 @@ function renderOv(keep) {
   if (!OV) { el.hidden = true; el.innerHTML = ''; document.body.classList.remove('ov-open'); return; }
   const prev = $('#ov-body'); const top = keep !== false && prev ? prev.scrollTop : 0;
   el.hidden = false; document.body.classList.add('ov-open');
-  const R = { onb: rOnb, lesson: rLesson, quiz: rQuiz, tryout: rTryout, fc: rFC, game: rGame }[OV.kind];
+  const R = { onb: rOnb, lesson: rLesson, quiz: rQuiz, tryout: rTryout, fc: rFC, game: rGame, materi: rMateri }[OV.kind];
   el.innerHTML = R ? R() : '';
   const b = $('#ov-body'); if (b) b.scrollTop = top;
   if (keep === false) { const f = el.querySelector('h1, .ov-title'); if (f) { f.setAttribute('tabindex', '-1'); f.focus({ preventScroll: true }); } }
 }
 function closeOv() {
-  stopTimer();
+  stopTimer(); ttsStop();
   if (OV && OV.gen && OV.gen.ctl) { try { OV.gen.ctl.abort(); } catch (e) { /* abaikan */ } }
   if (OV && OV.aiCtl) { try { OV.aiCtl.abort(); } catch (e) { /* abaikan */ } }
   OV = null; renderOv(); renderAll(); flushToasts();
@@ -202,9 +202,9 @@ function loadDemo() {
 }
 
 /* ======================= PELAJARAN 6 LANGKAH ======================= */
-function startLesson(id, gaya) {
+function startLesson(id, gaya, opt) {
   const a = ATOM[id]; if (!a) return;
-  closeSheet(true); stopTimer();
+  closeSheet(true); stopTimer(); ttsStop();
   const L = lessonOf(id);
   if (!L) { OV = { kind: 'lesson', id, gen: { state: AI.ok ? 'busy' : 'off' } }; renderOv(false); if (AI.ok) genLesson(id); return; }
   const r = atomRec(id); if (r.lvl < 1) r.lvl = 1; r.seen = today();
@@ -219,6 +219,7 @@ function startLesson(id, gaya) {
     uji: { list: qs.u.slice(0, 3), i: 0, cur: null, sel: null, chk: false, res: [], t0: 0, ft: '' },
     sus: {}, aiExp: null,
   };
+  if (opt && opt.skip) OV.step = 2;   // datang dari materi bergambar: langsung ke contoh soal
   renderOv(false);
 }
 function lsPickLat() {
@@ -258,7 +259,7 @@ function rLesson() {
   } else if (o.step === 1) {
     const g = o.gaya; const J = L.jelas;
     const content = g === 'langkah' ? `<ol class="steps-ol">${J.langkah.map((s) => `<li>${fmt(s)}</li>`).join('')}</ol>` : `<p>${fmt(J[g])}</p>`;
-    body = `<div class="seg gaya-seg" role="tablist" aria-label="Gaya penjelasan">${Object.keys(GAYA).map((k) => `<button type="button" role="tab" aria-selected="${k === g}" class="${k === g ? 'on' : ''}" data-act="ls-gaya" data-g="${k}">${GAYA[k]}</button>`).join('')}</div>
+    body = `${materiOf(o.id) ? `<button class="card row-card mt-link" data-act="mt-dari-ls">${icon('book')}<span><b>Materi lengkap bergambar</b><small>${materiOf(o.id).pages.length} halaman, dari dasar sampai soal sulit${mtRead(o.id) ? ' · sudah dibaca' : ''}</small></span>${icon('arrow')}</button>` : ''}<div class="seg gaya-seg" role="tablist" aria-label="Gaya penjelasan">${Object.keys(GAYA).map((k) => `<button type="button" role="tab" aria-selected="${k === g}" class="${k === g ? 'on' : ''}" data-act="ls-gaya" data-g="${k}">${GAYA[k]}</button>`).join('')}</div>
       <article class="paper ruled">${content}</article>
       ${o.aiExp ? `<article class="paper ai-exp"><p class="eyebrow">${icon('spark')} Cara baru dari Kak Tangga</p><div id="ai-exp">${o.aiExp.text ? fmt(o.aiExp.text) : '<span class="typing">Kak Tangga sedang berpikir…</span>'}</div>${o.aiExp.err ? `<p class="warn-t small">${esc(o.aiExp.err)}</p>` : ''}</article>` : ''}
       <div class="row-btns"><button class="btn ghost sm" data-act="ls-lain">${icon('refresh')} Jelaskan dengan cara lain</button>${AI.ok ? `<button class="btn ghost sm" data-act="ls-ai"${o.aiExp && o.aiExp.busy ? ' disabled' : ''}>${icon('spark')} Minta cara baru (AI)</button>` : ''}${AI.ok ? `<button class="btn ghost sm" data-act="chat" data-ctx="${o.id}">${icon('chat')} Tanya</button>` : ''}</div>`;

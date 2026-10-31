@@ -1,9 +1,10 @@
 /* Tangga — service worker: menyimpan aplikasi di perangkat supaya bisa dibuka tanpa sinyal.
    Ganti VERSI setiap kali file aplikasi berubah agar HP murid mengambil versi baru. */
-const VERSI = 'tangga-2026-10-31-2';
+const VERSI = 'tangga-2026-10-31-belajar-1';
 const FILES = [
   './', 'index.html', 'styles.css', 'manifest.webmanifest',
-  'content.js', 'content2.js', 'core.js', 'ui.js', 'play.js', 'ai.js', 'native.js', 'app.js',
+  'content.js', 'content2.js', 'core.js', 'figs.js', 'materi.js', 'materi-1.js', 'materi-2.js', 'materi-3.js',
+  'ui.js', 'play.js', 'ai.js', 'native.js', 'app.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png',
   'fonts/plus-jakarta-sans-latin-400-normal.woff2', 'fonts/plus-jakarta-sans-latin-500-normal.woff2',
   'fonts/plus-jakarta-sans-latin-600-normal.woff2', 'fonts/plus-jakarta-sans-latin-700-normal.woff2',

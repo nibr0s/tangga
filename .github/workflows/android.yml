@@ -90,8 +90,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="v0.1.${{ github.run_number }}"
+          TAG="v0.2.${{ github.run_number }}"
           gh release create "$TAG" dist/tangga.apk dist/tangga.aab \
             --title "Tangga $TAG" \
-            --notes "Pasang di Android: unduh **tangga.apk** lalu buka file-nya. Untuk Google Play: **tangga.aab**." \
+            --notes "Baru: bagian **Belajar** — 38 materi bergambar dari dasar untuk semua subtes, bisa dibacakan. Pasang di Android: unduh **tangga.apk** lalu buka file-nya (pasang di atas versi lama, progres tidak hilang). Untuk Google Play: **tangga.aab**." \
             --latest

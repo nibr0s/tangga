@@ -5,6 +5,12 @@ Belajar UTBK-SNBT satu anak tangga kecil setiap hari. Tersedia sebagai **web app
 - 🌐 Web: https://nibr0s.github.io/tangga/
 - 📱 Android (APK terbaru): https://github.com/nibr0s/tangga/releases/latest/download/tangga.apk
 
+## Isi aplikasi
+
+- **Belajar** — 38 materi bergambar untuk 7 subtes (PU, PK, PBM, PPU, LBI, LBE, PM), dimulai dari dasar. Setiap materi: halaman pendek bergambar, soal cek di tiap halaman, satu soal tantangan setara UTBK dengan langkah berpikir tutor, lalu ringkasan. Kata sulit bisa diketuk, halaman bisa dibacakan, dan ukuran huruf bisa diperbesar.
+- **Latihan** — contoh soal, isian, latihan adaptif, dan 3 soal "Buktikan" untuk setiap anak tangga, ditambah tryout, kartu kosakata, dan permainan harian.
+- Semua berjalan **tanpa internet** setelah dibuka sekali; gambar dibuat langsung di HP sehingga ukurannya kecil.
+
 ## Cara pasang di Android (untuk teman-teman)
 
 1. Buka link APK di atas dari HP Android, lalu unduh `tangga.apk`.
@@ -17,8 +23,8 @@ Pengguna iPhone: buka link web di Safari → **Bagikan** → **Tambahkan ke Laya
 
 | Folder | What it is |
 |---|---|
-| `www/` | The whole app (plain HTML/CSS/JS, no build step). This is also the website. |
-| `android/` | Capacitor 8 Android project that wraps `www/` (offline, daily reminder notifications, back button, backup via Share). |
+| `www/` | The whole app (plain HTML/CSS/JS, no build step). This is also the website. Lessons live in `materi-*.js`; `figs.js` draws their diagrams as SVG on the device. |
+| `android/` | Capacitor 8 Android project that wraps `www/` (offline, daily reminder notifications, read-aloud, back button, backup via Share). |
 | `assets/` | Source images for the app icon and splash screen. |
 | `.github/workflows/android.yml` | Builds a signed APK + AAB on every change and publishes them under **Releases**. |
 | `.github/workflows/pages.yml` | Publishes `www/` to GitHub Pages. |

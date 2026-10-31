@@ -11,7 +11,7 @@
 const NATIVE = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
 const NP = {};   // plugin bawaan Capacitor (diisi saat NATIVE)
 if (NATIVE && typeof window.Capacitor.registerPlugin === 'function') {
-  for (const n of ['App', 'LocalNotifications', 'Filesystem', 'Share']) {
+  for (const n of ['App', 'LocalNotifications', 'Filesystem', 'Share', 'TextToSpeech']) {
     try { NP[n] = window.Capacitor.registerPlugin(n); } catch (e) { /* plugin tidak ada */ }
   }
 }

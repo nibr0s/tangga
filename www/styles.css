@@ -639,3 +639,92 @@ body.ov-open #toast.show, body.sh-open #toast.show { transform: translate(-50%, 
 .ingat-card .ic { width: 20px; height: 20px; color: var(--pen); }
 a.btn { text-decoration: none; color: inherit; }
 a.btn.primary { color: var(--on-pen); }
+
+/* ======================= gambar materi (figs.js) ======================= */
+:root { --fg-a: #A9B8F6; --fg-m: #FFE14A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --fg-a: #3B50B5; --fg-m: #7A6514; } }
+:root[data-theme="dark"] { --fg-a: #3B50B5; --fg-m: #7A6514; }
+.fig { margin: 14px 0; padding: 12px 10px; background: var(--sheet); border: 1px solid var(--line); border-radius: 16px; }
+.fig svg { display: block; width: 100%; height: auto; max-height: 360px; overflow: visible; }
+.fig figcaption { margin-top: 8px; font-size: 13.5px; line-height: 1.45; color: var(--ink-2); text-align: center; }
+.fig .fg-line { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.fig .fg-thin { fill: none; stroke: var(--ink-2); stroke-width: 1.4; stroke-linecap: round; }
+.fig .fg-grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 4; }
+.fig .fg-off { fill: var(--sheet); stroke: var(--ink); stroke-width: 1.5; }
+.fig .fg-box { fill: var(--paper); stroke: var(--ink); stroke-width: 1.5; }
+.fig .fg-head { fill: var(--pen-soft); stroke: var(--ink); stroke-width: 1.5; }
+.fig .fg-on { fill: var(--fg-a); stroke: var(--ink); stroke-width: 1.5; }
+.fig .fg-on2 { fill: var(--fg-m); stroke: var(--ink); stroke-width: 1.5; }
+.fig .fg-ok { fill: var(--good-soft); stroke: var(--good); stroke-width: 1.8; }
+.fig .fg-no { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 1.8; }
+.fig .fg-q { fill: var(--sheet); stroke: var(--pen); stroke-width: 2; stroke-dasharray: 6 4; }
+.fig .fg-pen { fill: var(--pen); }
+.fig .fg-pill { fill: var(--sheet); stroke: var(--pen); stroke-width: 1.4; }
+.fig .fg-v { fill: var(--sheet); stroke: var(--ink); stroke-width: 2; }
+.fig .fg-v2 { fill: var(--paper); stroke: var(--ink); stroke-width: 2; }
+.fig .fg-vline { fill: none; stroke: var(--ink); stroke-width: 2; }
+.fig .fg-pline { fill: none; stroke: var(--pen); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.fig .fg-pline2 { fill: none; stroke: var(--pen); stroke-width: 2.5; stroke-linejoin: round; }
+.fig .fg-xline { stroke: var(--bad); stroke-width: 2.4; stroke-linecap: round; }
+.fig .fg-mbar { stroke: var(--ink); stroke-width: 1.2; }
+.fig .fg-g0 { stop-color: var(--fg-a); }
+.fig .fg-g1 { stop-color: var(--fg-m); }
+.fig .fg-ic { fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.fig .fg-ic-pen { fill: none; stroke: var(--pen); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.fig .fg-ic-ok { fill: none; stroke: var(--good); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.fig .fg-ic-no { fill: none; stroke: var(--bad); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.fig text { font-family: var(--f-body); }
+.fig .fg-t { fill: var(--ink); font-size: 13px; font-weight: 600; }
+.fig .fg-tm { fill: var(--ink-2); font-size: 13px; font-weight: 600; }
+.fig .fg-tb { fill: var(--ink); font-size: 14px; font-weight: 800; }
+.fig .fg-ts { fill: var(--ink-2); font-size: 11.5px; font-weight: 600; }
+.fig .fg-tw { fill: var(--on-pen); font-size: 13px; font-weight: 800; }
+.fig .fg-h { fill: var(--pen); font-family: var(--f-hand); font-size: 16px; font-weight: 700; }
+.fig .fg-b { font-weight: 800; }
+.fig .fg-hl { paint-order: stroke; stroke: var(--fg-m); stroke-width: 7px; stroke-linejoin: round; }
+
+/* ======================= pembaca materi bergambar ======================= */
+.ov-in.materi .ov-body { background: var(--paper); }
+.mt { --mt-fs: 16.5px; }
+.mt.fs1 { --mt-fs: 19px; }
+.mt.fs2 { --mt-fs: 22px; }
+.mt-page { font-size: var(--mt-fs); line-height: 1.62; }
+.mt-page > p, .mt-page .mt-box p, .mt-page .tutor li, .mt-page .kunci li { font-size: var(--mt-fs); }
+.mt-page > p { margin: 10px 0; }
+.mt-h { font-size: calc(var(--mt-fs) * 1.32); line-height: 1.25; margin: 4px 0 6px; }
+.mt-prog { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; width: 100%; margin-top: 6px; }
+.mt-prog i { display: block; height: 100%; background: var(--pen); border-radius: 3px; transition: width .25s ease; }
+.mt-tools { display: flex; gap: 6px; }
+.mt-tools .icon-btn { width: 40px; height: 40px; }
+.mt-box { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 14px; margin: 14px 0; }
+.mt-box > .ic { flex: none; width: 22px; height: 22px; margin-top: 3px; }
+.mt-box .mt-bt { display: block; font-size: 12.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+.mt-box p { margin: 2px 0 0; line-height: 1.55; }
+.mt-box.ingat { background: var(--pen-soft); }
+.mt-box.ingat > .ic, .mt-box.ingat .mt-bt { color: var(--pen); }
+.mt-box.awas { background: var(--warn-soft); }
+.mt-box.awas > .ic, .mt-box.awas .mt-bt { color: var(--warn); }
+.mt-cek { margin: 18px 0 8px; padding: 14px; border: 2px dashed var(--pen); border-radius: 16px; background: var(--sheet); }
+.mt-cek .q-stem { font-size: var(--mt-fs); }
+.choices.col { flex-direction: column; align-items: stretch; }
+.choices.col .choice { text-align: left; justify-content: flex-start; font-size: var(--mt-fs); }
+.term { font: inherit; color: var(--pen); background: none; border: none; padding: 0; margin: 0; border-bottom: 2px dotted var(--pen); cursor: pointer; }
+.term-d { display: none; }
+.term.open { border-bottom-style: solid; }
+.term.open + .term-d { display: inline; margin: 0 2px 0 5px; padding: 1px 7px; border-radius: 6px; background: var(--mark-bg); font-size: .92em; }
+.term.open + .term-d::before { content: '= '; font-weight: 700; }
+.mt-page .kunci { list-style: none; padding: 0; margin: 12px 0; }
+.mt-page .kunci li { display: flex; gap: 10px; align-items: flex-start; margin: 12px 0; line-height: 1.5; }
+.mt-page .kunci .ic { color: var(--good); flex: none; width: 22px; height: 22px; margin-top: 2px; }
+.mt-page .tutor { margin-top: 16px; padding: 14px; border-radius: 16px; background: var(--sheet); border: 1px solid var(--line); }
+.mt-page .tutor .pikir { font-style: italic; color: var(--ink-2); }
+.mt-page .tutor .ws li { margin: 8px 0; }
+.mt-page.end .stamp { margin-bottom: 8px; }
+.mt-page .passage { font-size: calc(var(--mt-fs) * .92); }
+.btn .btn-sub { display: block; width: 100%; font-size: 12px; font-weight: 600; opacity: .8; }
+.btn:has(.btn-sub) { flex-wrap: wrap; }
+.mt-card .btn { width: 100%; }
+.mt-link { margin-bottom: 12px; }
+
+.mt-page.end { text-align: center; }
+.mt-page.end .kunci, .mt-page.end .kunci li { text-align: left; }

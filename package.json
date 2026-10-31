@@ -1,6 +1,6 @@
 {
   "name": "tangga",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Tangga UTBK — belajar UTBK-SNBT anak tangga demi anak tangga (web + Android).",
   "scripts": {
@@ -10,6 +10,7 @@
     "serve": "npx --yes http-server www -p 8080 -c-1"
   },
   "dependencies": {
+    "@capacitor-community/text-to-speech": "^8.0.2",
     "@capacitor/android": "^8.6.0",
     "@capacitor/app": "^8.1.2",
     "@capacitor/core": "^8.6.0",

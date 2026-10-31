@@ -46,7 +46,7 @@ function nextToast() {
   toastBusy = true;
   el.innerHTML = `${icon(t.kind === 'streak' ? 'flame' : t.kind === 'badge' ? 'star' : t.kind === 'info' ? 'snow' : t.kind === 'warn' ? 'x' : 'check')}<span>${esc(t.msg)}</span>`;
   el.className = 'show' + (t.kind ? ' t-' + t.kind : '');
-  setTimeout(() => { el.className = ''; setTimeout(nextToast, 220); }, 2400);
+  setTimeout(() => { el.className = ''; setTimeout(nextToast, 220); }, Math.max(2400, t.msg.length * 60)); // pesan panjang tampil lebih lama
 }
 function flushToasts() { const p = pendingToasts; pendingToasts = []; for (const t of p) toast(t.msg, t.kind); }
 async function copyText(text) {
@@ -226,6 +226,8 @@ const ACT = {
     renderMain();
   },
 };
+
+Object.assign(ACT, ACT_MT, { 'mt-dari-ls'() { const cur = OV; openMateri(cur.id, { ret: cur }); } });
 
 /* ---------- cadangan ke file ---------- */
 async function downloadBackup() {
