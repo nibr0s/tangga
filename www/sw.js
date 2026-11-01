@@ -1,6 +1,6 @@
 /* Tangga — service worker: menyimpan aplikasi di perangkat supaya bisa dibuka tanpa sinyal.
    Ganti VERSI setiap kali file aplikasi berubah agar HP murid mengambil versi baru. */
-const VERSI = 'tangga-2026-11-01-perbaikan-1';
+const VERSI = 'tangga-2026-11-01-vintage-1';
 const FILES = [
   './', 'index.html', 'styles.css', 'manifest.webmanifest', 'privasi.html',
   'config.js', 'content.js', 'content2.js', 'core.js', 'server.js', 'figs.js', 'materi.js', 'materi-1.js', 'materi-2.js', 'materi-3.js',
