@@ -73,7 +73,7 @@ A('ppu2', 'ppu', 'Antonim', 'Menemukan lawan kata yang tepat.', ['ppu1'], {
   uji: [
     { t: 'Antonim kata “mayoritas” adalah ...', o: ['minoritas', 'kebanyakan', 'semua', 'populasi', 'separuh'], k: 0, d: 2, b: 'Mayoritas (bagian terbesar) berlawanan dengan minoritas (bagian terkecil).' },
     { t: 'Antonim kata “sinkron” adalah ...', o: ['selaras', 'serentak', 'tidak serentak', 'sejalan', 'seimbang'], k: 2, d: 2, b: 'Sinkron = serentak, selaras waktunya. Pilihan lain justru sinonimnya.', x: { 0: 'ppu1', 1: 'ppu1' } },
-    { t: 'Antonim kata “apatis” adalah ...', o: ['acuh', 'peduli', 'malas', 'pasif', 'diam'], k: 1, d: 3, b: 'Apatis = acuh tak acuh, tidak peduli; lawannya peduli.' },
+    { t: 'Antonim kata “apatis” adalah ...', o: ['masa bodoh', 'peduli', 'malas', 'pasif', 'diam'], k: 1, d: 3, b: 'Apatis = acuh tak acuh, tidak peduli, masa bodoh; lawannya peduli. “Masa bodoh” justru sinonimnya.' },
   ],
 });
 

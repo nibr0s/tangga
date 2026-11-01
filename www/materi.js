@@ -87,7 +87,7 @@ function mtCek(c, i) {
       let cls = 'choice'; if (st != null) { if (j === c.k) cls += ' right'; else if (j === st) cls += ' wrong'; }
       return `<button type="button" class="${cls}" role="radio" aria-checked="${st === j}" data-act="mt-cek" data-i="${j}"${st != null ? ' disabled' : ''}>${fmtM(t)}</button>`;
     }).join('')}</div>
-    ${st != null ? `<div class="fb ${st === c.k ? 'ok' : 'no'}" role="status"><p class="fb-t hand">${st === c.k ? 'Betul!' : 'Belum tepat — lihat penjelasannya.'}</p><p class="fb-b">${fmtM(c.b)}</p></div>` : ''}</div>`;
+    ${st != null ? `<div class="fb ${st === c.k ? 'ok' : 'no'}" role="status"><p class="fb-t hand">${st === c.k ? 'Betul!' : 'Belum tepat — lihat penjelasannya.'}</p><p class="fb-b">${fmtM(c.b)}</p>${laporLink(`${OV.id}/hal${i + 1}`, 'Soal ini keliru?')}</div>` : ''}</div>`;
 }
 function mtTan(T) {
   const t = OV.tan; const n = T.langkah.length; const right = t.sel === T.k;
@@ -106,7 +106,7 @@ function mtTan(T) {
     ${t.chk && t.sel != null ? `<div class="fb ${right ? 'ok' : 'no'}" role="status"><p class="fb-t hand">${right ? 'Hebat, benar!' : 'Belum tepat — tidak apa-apa, ini soal sulit.'}</p><p class="fb-k">Jawaban: <b>${LETTERS[T.k]}. ${fmtM(T.o[T.k])}</b></p></div>` : ''}
     ${t.shown ? `<div class="tutor"><p class="eyebrow">${icon('bulb')} Cara berpikir tutor</p>${T.pikir ? `<p class="pikir">${fmtM(T.pikir)}</p>` : ''}
       <ol class="ws">${T.langkah.slice(0, t.shown).map((s) => `<li>${fmtM(s)}</li>`).join('')}</ol>
-      ${t.shown >= n ? `${T.fig ? figure(T.fig) : ''}${t.sel == null ? `<p class="ans">Jawaban: <b>${LETTERS[T.k]}. ${fmtM(T.o[T.k])}</b></p>` : ''}${T.jebak ? `<div class="mt-box awas">${icon('warn')}<div><span class="mt-bt">Kenapa banyak yang terjebak</span><p>${fmtM(T.jebak)}</p></div></div>` : ''}` : ''}
+      ${t.shown >= n ? `${T.fig ? figure(T.fig) : ''}${t.sel == null ? `<p class="ans">Jawaban: <b>${LETTERS[T.k]}. ${fmtM(T.o[T.k])}</b></p>` : ''}${T.jebak ? `<div class="mt-box awas">${icon('warn')}<div><span class="mt-bt">Kenapa banyak yang terjebak</span><p>${fmtM(T.jebak)}</p></div></div>` : ''}${laporLink(`${OV.id}/tantangan`, 'Soal tantangan ini keliru?')}` : ''}
     </div>` : ''}
   </article>`;
 }
@@ -117,6 +117,7 @@ function mtEnd(m) {
     <h2 class="mt-h">Kunci: ${esc(a.judul)}</h2>
     <ul class="kunci">${m.kunci.map((k) => `<li>${icon('check')}<span>${fmtM(k)}</span></li>`).join('')}</ul>
     <p class="mute">${L >= 3 ? 'Kamu sudah lolos anak tangga ini. Latihan lagi akan menjaganya tetap kuat.' : 'Sekarang buktikan: contoh soal, isian, lalu latihan dan 3 soal “Buktikan”.'}</p>
+    ${laporLink(`${OV.id}/materi`, 'Ada yang keliru di materi ini?')}
   </article>`;
 }
 

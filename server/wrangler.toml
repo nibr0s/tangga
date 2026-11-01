@@ -1,0 +1,34 @@
+# Server Tangga — dipasang ke Cloudflare Workers (paket gratis cukup untuk mulai).
+# Rahasia (secret) TIDAK ditulis di sini. Pasang lewat GitHub Actions (lihat docs/SETUP-AI.md)
+# atau `npx wrangler secret put ANTHROPIC_API_KEY` dan `npx wrangler secret put ADMIN_KEY`.
+
+name = "tangga-api"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[vars]
+# Model Claude termurah saat ini. Ganti di sini kalau mau model lain.
+MODEL = "claude-haiku-5-5"
+# Situs yang boleh memanggil server ini (web GitHub Pages + aplikasi Android Capacitor).
+ALLOWED_ORIGINS = "https://nibr0s.github.io,https://localhost"
+# Batas harian (reset pukul 00.00 WIB). Ini rem biaya utama — naikkan pelan-pelan.
+DAILY_PER_DEVICE = "30"
+DAILY_PER_IP = "400"
+DAILY_GLOBAL = "1000"
+# Harga per 1 juta token (USD) untuk perkiraan biaya di halaman admin. Cek platform.claude.com/docs.
+PRICE_IN_PER_M = "0.10"
+PRICE_OUT_PER_M = "0.50"
+# "false" = matikan Kak Tangga tanpa menghapus server (laporan & statistik tetap jalan).
+AI_ENABLED = "true"
+
+[[durable_objects.bindings]]
+name = "STORE"
+class_name = "TanggaStore"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["TanggaStore"]
+
+[observability]
+enabled = true

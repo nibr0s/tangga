@@ -10,8 +10,9 @@ function renderSheet() {
   const el = $('#sheet');
   if (!SH) { el.hidden = true; el.innerHTML = ''; document.body.classList.remove('sh-open'); return; }
   const ta = $('#chat-ta'); const keep = ta ? { v: ta.value, f: document.activeElement === ta } : null;
-  const panes = { atom: () => shAtom(SH.id), set: shSet, cekdiri: shCekDiri, tangga: shTanggaBaru, chat: shChat, salin: shSalin, pulih: shPulih };
-  const labels = { atom: 'Detail anak tangga', set: 'Profil dan pengaturan', cekdiri: 'Cek diri mingguan', tangga: 'Buat tangga baru', chat: 'Kak Tangga', salin: 'Salin teks', pulih: 'Pulihkan cadangan' };
+  const ta2 = $('#lp-catatan') || $('#mk-isi'); if (ta2 && SH && (SH.kind === 'lapor' || SH.kind === 'masukan')) SH.catatan = ta2.value;
+  const panes = { atom: () => shAtom(SH.id), set: shSet, cekdiri: shCekDiri, tangga: shTanggaBaru, chat: shChat, salin: shSalin, pulih: shPulih, aisetuju: shAiSetuju, lapor: shLapor, masukan: shMasukan };
+  const labels = { atom: 'Detail anak tangga', set: 'Profil dan pengaturan', cekdiri: 'Cek diri mingguan', tangga: 'Buat tangga baru', chat: 'Kak Tangga', salin: 'Salin teks', pulih: 'Pulihkan cadangan', aisetuju: 'Kenalan dengan Kak Tangga', lapor: 'Laporkan kesalahan', masukan: 'Kirim masukan' };
   const R = panes[SH.kind];
   el.hidden = false; document.body.classList.add('sh-open');
   el.innerHTML = `<div class="sh-bg" data-act="sheet-close"></div><div class="sh-panel${SH.kind === 'chat' ? ' chat' : ''}" role="dialog" aria-modal="true" aria-label="${labels[SH.kind] || ''}"><button class="icon-btn sh-x" data-act="sheet-close" aria-label="Tutup">${icon('x')}</button><div class="sh-c">${R ? R() : ''}</div></div>`;
@@ -36,6 +37,54 @@ function shPulih() {
     <div class="sh-actions"><button class="btn primary big" data-act="pulih-ya">Pulihkan progres ini</button><button class="btn ghost" data-act="sheet-close">Batal</button></div>`;
 }
 function shSalin() { return `<div class="sh-head"><h2>Salin teks</h2><p class="mute">Menyalin otomatis tidak diizinkan di sini. Tekan lama teks di bawah, lalu salin.</p></div><textarea class="copy-ta" readonly rows="12" aria-label="Teks untuk disalin">${esc(SH.text)}</textarea>`; }
+
+/* ---------- Kak Tangga: kenalan dulu (AI, aturan aman, izin orang tua) ---------- */
+function shAiSetuju() {
+  const d = SH; const siap = d.umur === 'dewasa' || (d.umur === 'remaja' && d.izin);
+  return `<div class="sh-head"><p class="eyebrow">${icon('spark')} Sebelum mulai</p><h2>Kenalan dulu dengan Kak Tangga</h2></div>
+    <ul class="ai-rules">
+      <li>${icon('spark')}<span><b>Kak Tangga adalah AI</b> (program komputer), bukan guru manusia. Jawabannya bisa keliru — kalau ragu, cek ke guru atau buku.</span></li>
+      <li>${icon('lock')}<span><b>Jangan kirim data pribadi:</b> nama lengkap, alamat, nomor HP, nama sekolah, atau foto wajah.</span></li>
+      <li>${icon('eye')}<span>Pesanmu dikirim lewat server Tangga ke <b>Claude</b> (AI buatan Anthropic) untuk dibuatkan jawaban. Tangga tidak menyimpan isi obrolanmu.</span></li>
+      <li>${icon('flag')}<span>Jawaban aneh atau tidak pantas? Ketuk <b>Laporkan</b> di bawah jawabannya.</span></li>
+      <li>${icon('warn')}<span>Kalau kamu sedang dalam bahaya atau ingin menyakiti diri, bicaralah dengan orang dewasa yang kamu percaya, atau hubungi <b>112</b>.</span></li>
+    </ul>
+    <span class="lbl">Berapa umurmu?</span>
+    <div class="seg" role="group">${[['dewasa', '18 tahun ke atas'], ['remaja', 'Di bawah 18 tahun']].map(([v, l]) => `<button type="button" class="${d.umur === v ? 'on' : ''}" aria-pressed="${d.umur === v}" data-act="ai-umur" data-v="${v}">${l}</button>`).join('')}</div>
+    ${d.umur === 'remaja' ? `<label class="check"><input type="checkbox" id="ai-izin" ${d.izin ? 'checked' : ''}> Orang tua/waliku sudah tahu dan mengizinkan aku memakai Kak Tangga.</label>` : ''}
+    <p class="small mute">Baca juga <a href="privasi.html" target="_blank" rel="noopener">kebijakan privasi Tangga</a>.</p>
+    <div class="sh-actions"><button class="btn primary big" data-act="ai-setuju-ok"${siap ? '' : ' disabled'}>Aku mengerti, mulai</button><button class="btn ghost" data-act="sheet-close">Nanti saja</button></div>`;
+}
+
+/* ---------- laporan soal/materi keliru & jawaban AI ---------- */
+const ALASAN = {
+  konten: ['Kunci jawaban salah', 'Pembahasan membingungkan', 'Soal tidak jelas', 'Ada salah ketik', 'Lainnya'],
+  ai: ['Jawabannya salah', 'Tidak pantas atau tidak aman', 'Tidak nyambung', 'Lainnya'],
+};
+function shLapor() {
+  const d = SH; const list = ALASAN[d.jenis] || ALASAN.konten;
+  return `<div class="sh-head"><p class="eyebrow">${icon('flag')} Laporkan</p><h2>${d.jenis === 'ai' ? 'Ada yang salah dengan jawaban Kak Tangga?' : 'Ada yang keliru di sini?'}</h2>${d.judul ? `<p class="mute">“${esc(d.judul)}”</p>` : ''}</div>
+    <div class="chips-row" role="group" aria-label="Alasan">${list.map((a) => `<button type="button" class="tchip${d.alasan === a ? ' on' : ''}" aria-pressed="${d.alasan === a}" data-act="lapor-alasan" data-a="${esc(a)}">${a}</button>`).join('')}</div>
+    <form class="form" onsubmit="return false"><label for="lp-catatan">Ceritakan sedikit (boleh kosong)</label><textarea id="lp-catatan" rows="3" maxlength="600" placeholder="mis. menurutku jawabannya C karena …">${esc(d.catatan || '')}</textarea></form>
+    <p class="small mute">${d.jenis === 'ai' ? 'Laporan ini ikut mengirim jawaban tersebut dan pertanyaanmu sebelumnya, supaya bisa diperiksa. ' : ''}Jangan tulis data pribadi di sini.</p>
+    <div class="sh-actions"><button class="btn primary big" data-act="lapor-kirim"${d.alasan ? '' : ' disabled'}>Kirim laporan</button><button class="btn ghost" data-act="lapor-batal">Batal</button></div>`;
+}
+function shMasukan() {
+  return `<div class="sh-head"><p class="eyebrow">${icon('chat')} Masukan</p><h2>Bantu Tangga jadi lebih baik</h2><p class="mute">Apa yang kamu suka? Apa yang bikin bingung? Fitur apa yang kamu mau? Pesanmu dibaca langsung oleh pembuat Tangga.</p></div>
+    <form class="form" onsubmit="return false"><label for="mk-isi">Pesanmu</label><textarea id="mk-isi" rows="5" maxlength="1000" placeholder="Tulis di sini…">${esc(SH.catatan || '')}</textarea></form>
+    <p class="small mute">Jangan tulis data pribadi (nomor HP, alamat, nama lengkap).</p>
+    <div class="sh-actions"><button class="btn primary big" data-act="masukan-kirim">Kirim</button><button class="btn ghost" data-act="sheet-close">Batal</button></div>`;
+}
+function laporToast(hasil) {
+  toast(hasil === 'terkirim' ? 'Terima kasih! Laporanmu sudah sampai ke pembuat Tangga.'
+    : hasil === 'antre' ? 'Tersimpan. Akan terkirim otomatis saat ada internet.'
+      : 'Tersimpan di perangkat ini. Akan terkirim otomatis begitu server Tangga aktif.');
+}
+/* judul singkat untuk ref: id soal, id anak tangga, atau "id/bagian" materi */
+function refJudul(ref) {
+  const q = QB[ref]; if (q) return q.t.length > 110 ? q.t.slice(0, 108) + '…' : q.t;
+  const a = ATOM[String(ref).split('/')[0]]; return a ? a.judul : '';
+}
 
 /* ---------- notifikasi kecil (toast) ---------- */
 const toastQ = []; let toastBusy = false;
@@ -66,13 +115,16 @@ function setSelf(s, v) {
 
 /* ---------- ringkasan untuk orang tua/guru ---------- */
 function ringkasan() {
-  const P = S.profil; const pt = prediksiTotal(); const w = statsRange(nowMs() - 7 * 864e5, nowMs() + 1);
+  /* Sengaja tanpa angka perkiraan skor: orang tua bisa mengambil keputusan dari angka itu,
+     padahal belum dikalibrasi dengan skor UTBK asli. Yang dikirim hanya data yang benar-benar terukur. */
+  const P = S.profil; const w = statsRange(nowMs() - 7 * 864e5, nowMs() + 1);
+  const total = LOG.filter((e) => e.src !== 'kartu').length;
   return [
     `Ringkasan belajar UTBK — ${P.nama} (kelas ${P.kelas})`,
     `Tanggal: ${tglPanjang(today())}`,
     `Streak: ${S.streak.n} hari (rekor ${S.streak.best} hari)`,
-    `Perkiraan skor rata-rata: ${pt.skor} ± ${pt.rentang} (target ${P.target})`,
     `Minggu ini: ${w.n} soal, akurasi ${pct(w.acc)}`,
+    `Total soal tercatat: ${total}`,
     `Penguasaan materi: ${pct(masteryAll())}`,
     'Penilaian diri per subtes (1–5):',
     ...SUBTES.map((x) => `- ${x.nama}: ${selfOf(x.id) || '-'}`),
@@ -137,16 +189,51 @@ const ACT = {
   'ls-lain'() {
     const ks = Object.keys(GAYA); const nx = ks.find((g) => !OV.tried.includes(g));
     if (nx) { OV.gaya = nx; OV.tried.push(nx); renderOv(); return; }
-    if (AI.ok) { aiJelaskan(); return; }
+    if (AI.ok) { if (perluSetuju('ls-ai')) return; aiJelaskan(); return; }
     OV.gaya = ks[(ks.indexOf(OV.gaya) + 1) % ks.length]; renderOv();
   },
-  'ls-ai'() { aiJelaskan(); },
+  'ls-ai'() { if (perluSetuju('ls-ai')) return; aiJelaskan(); },
   'ls-ws'() { OV.ws += 1; renderOv(); },
   'ls-ws-all'() { OV.ws = OV.L.contoh.langkah.length; renderOv(); },
   'rp-pilih'(d) { if (OV.rp.done) return; OV.rp.sel = Number(d.i); renderOv(); },
   'rp-cek'() { if (OV.rp.sel == null) return; OV.rp.done = true; renderOv(); },
   'ls-ulang'() { const id = OV.id; const tried = OV.tried.slice(); const nx = Object.keys(GAYA).find((g) => !tried.includes(g)) || Object.keys(GAYA)[(Object.keys(GAYA).indexOf(OV.gaya) + 1) % 4]; startLesson(id, nx); if (OV && OV.kind === 'lesson' && !OV.gen) { OV.tried = Array.from(new Set(tried.concat([nx]))); OV.step = 1; renderOv(false); } },
-  lapor() { S.flags.push({ a: OV && OV.id, d: today() }); save(); toast('Terima kasih! Laporan disimpan untuk ditinjau guru.'); },
+  lapor(d) {
+    const ref = d.ref || (OV && OV.id) || '';
+    openSheet('lapor', { jenis: d.jenis === 'ai' ? 'ai' : 'konten', ref, judul: refJudul(ref), alasan: null, catatan: '' });
+  },
+  'lapor-alasan'(d) { if (!SH || SH.kind !== 'lapor') return; SH.alasan = d.a; renderSheet(); },
+  async 'lapor-kirim'() {
+    if (!SH || SH.kind !== 'lapor' || !SH.alasan || SH.sending) return;
+    const ta = $('#lp-catatan'); const L = SH; L.sending = true;
+    const hasil = await kirimLaporan({ jenis: L.jenis, ref: L.ref, alasan: L.alasan, catatan: ta ? ta.value.trim().slice(0, 600) : '', isi: L.isi || '' });
+    if (SH === L) { if (L.kembali === 'chat') { SH = { kind: 'chat' }; renderSheet(); } else closeSheet(); }
+    laporToast(hasil);
+  },
+  'lapor-batal'() { if (SH && SH.kembali === 'chat') { SH = { kind: 'chat' }; renderSheet(); } else closeSheet(); },
+  'chat-lapor'(d) {
+    const i = Number(d.i); const t = CHAT.turns[i]; if (!t || !t.content) return;
+    let tanya = ''; for (let j = i - 1; j >= 0; j--) if (CHAT.turns[j].role === 'user') { tanya = CHAT.turns[j].content; break; }
+    const isi = `Murid: ${tanya}\n\nKak Tangga: ${t.content}`.slice(0, 3800);
+    openSheet('lapor', { jenis: 'ai', ref: CHAT.ctx ? 'chat:' + CHAT.ctx : 'chat', judul: '', isi, alasan: null, catatan: '', kembali: 'chat' });
+  },
+  masukan() { openSheet('masukan', { catatan: '' }); },
+  async 'masukan-kirim'() {
+    const ta = $('#mk-isi'); const v = ta ? ta.value.trim() : '';
+    if (!v) { toast('Tulis dulu pesanmu, ya.'); return; }
+    if (!SH || SH.sending) return; SH.sending = true;
+    const hasil = await kirimLaporan({ jenis: 'masukan', ref: 'masukan', alasan: '', catatan: v.slice(0, 1000), isi: '' });
+    closeSheet(); laporToast(hasil);
+  },
+  'ai-umur'(d) { if (!SH || SH.kind !== 'aisetuju') return; SH.umur = d.v; if (d.v === 'dewasa') SH.izin = false; renderSheet(); },
+  'ai-setuju-ok'() {
+    if (!SH || SH.kind !== 'aisetuju') return;
+    const ok = SH.umur === 'dewasa' || (SH.umur === 'remaja' && SH.izin); if (!ok) return;
+    S.set.aiSetuju = keyOf(new Date()); S.set.umur = SH.umur; save();
+    const next = SH.next; closeSheet(true); renderAll();
+    if (next && ACT[next.act]) ACT[next.act](next.d || {});
+  },
+  'ai-tarik'() { S.set.aiSetuju = null; S.set.umur = null; save(); renderSheet(); toast('Persetujuan Kak Tangga ditarik. Kamu akan ditanya lagi sebelum memakainya.'); },
   'gen-stop'() { if (OV && OV.gen && OV.gen.ctl) OV.gen.ctl.abort(); else closeOv(); },
   'gen-ulang'() { if (OV) genLesson(OV.id); },
   'ov-close'() { closeOv(); },
@@ -188,13 +275,13 @@ const ACT = {
   },
   'fc-flip'() { OV.flip = true; renderOv(); },
   'fc-rate'(d) { fcRate(Number(d.g)); },
-  chat(d) { openChat(d.ctx, d.foto === '1'); },
+  chat(d) { if (perluSetuju('chat', d)) return; openChat(d.ctx, d.foto === '1'); },
   'chat-kirim'() { const ta = $('#chat-ta'); if (!ta) return; const v = ta.value; if (!v.trim()) return; ta.value = ''; chatSend(v); },
   'chat-stop'() { if (CHAT.ctl) CHAT.ctl.abort(); },
   'chat-chip'(d) { chatSend(d.t); },
   'chat-foto'() { const f = $('#chat-file'); if (f) f.click(); },
   'chat-ctx-clear'() { CHAT.ctx = null; renderSheet(); },
-  'tangga-baru'() { openSheet('tangga', { dec: {} }); },
+  'tangga-baru'() { if (perluSetuju('tangga-baru')) return; openSheet('tangga', { dec: {} }); },
   'tb-contoh'(d) { const t = $('#tb-topik'); if (t) t.value = d.t; },
   pecah() { pecahTopik(); },
   'pecah-stop'() { if (SH && SH.dec && SH.dec.ctl) SH.dec.ctl.abort(); },
@@ -274,6 +361,7 @@ document.addEventListener('change', (e) => {
   if (el.id === 'restore-file') { const f = el.files && el.files[0]; el.value = ''; if (f) readBackupFile(f); return; }
   if (el.id === 'chat-file' && el.files && el.files[0]) { const f = el.files[0]; const ta = $('#chat-ta'); const v = ta ? ta.value : ''; if (ta) ta.value = ''; chatSend(v, [f]); el.value = ''; return; }
   if (el.id === 'ob-tempat' && OV && OV.d) { OV.d.tempat = el.checked; return; }
+  if (el.id === 'ai-izin' && SH && SH.kind === 'aisetuju') { SH.izin = el.checked; renderSheet(); return; }
   const b = el.dataset.bind; if (!b) return;
   const [o, k] = b.split('.');
   let v = el.type === 'range' ? Number(el.value) : el.value;
@@ -312,7 +400,8 @@ window.addEventListener('hashchange', () => { const before = UI.tab; fromHash();
 
 let lastDay = null;
 function checkDay() { if (!S.onboarded) return; const t = today(); if (t !== lastDay) { lastDay = t; onDayChange(); renderAll(); flushToasts(); } }
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushPending(); else checkDay(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushPending(); else { checkDay(); serverTick(); } });
+window.addEventListener('online', () => serverTick());
 window.addEventListener('pagehide', flushPending);
 setInterval(checkDay, 60000);
 
@@ -348,7 +437,7 @@ function boot(hot) {
   nativeInit();
   if (!S.onboarded) startOnb();
   flushToasts();
-  initAI(); initCloud();
+  initAI(); initCloud(); serverTick();
   const H = window.claude && window.claude.hot;
   if (H && typeof H.snapshot === 'function') H.snapshot(() => ({ tab: UI.tab }));
 }
