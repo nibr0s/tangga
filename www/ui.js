@@ -191,17 +191,34 @@ function nextCard(key, nid) {
       : `<button class="btn primary big" data-act="belajar" data-id="${nid}">${lvl(nid) ? 'Lanjutkan' : 'Mulai'} anak tangga ${i + 1} ${icon('arrow')}</button>${materiOf(nid) ? `<button class="btn ghost sm" data-act="materi" data-id="${nid}">${icon('book')} Baca materinya lagi</button>` : ''}`}
   </section>`;
 }
+/* Progres menuju perkiraan skor: berapa soal lagi di tiap subtes. */
+function skorBars() {
+  return `<ul class="sc-bars">${SUBTES.map((x) => { const n = Math.min(nJawab(x.id), SKOR_MIN); return `<li style="--h:${x.hue}">${subChip(x.id)}<div class="dk-bar" aria-hidden="true"><span style="width:${((n / SKOR_MIN) * 100).toFixed(0)}%"></span></div><span class="small mute">${n}/${SKOR_MIN}</span></li>`; }).join('')}</ul>`;
+}
 function scoreCard(pt, gap, dl) {
   const P = S.profil; const lo = 200, hi = 900; const pos = (v) => clamp(((v - lo) / (hi - lo)) * 100, 0, 100);
   const yr = parseKey(P.utbk).getFullYear(); const tgt = [P.prodi, P.ptn].filter(Boolean).join(' · ');
+  const hari = `${dl > 0 ? `<b>D-${dl}</b> menuju UTBK ${yr} (perkiraan ${tglPendek(P.utbk)}). ` : ''}${tgt ? `Target: ${esc(tgt)}. ` : ''}`;
+  if (!skorSiapSemua()) {
+    const siap = SUBTES.filter((x) => skorSiap(x.id)).length;
+    return `<section class="card score-card locked">
+      <div class="sc-row">
+        <div><p class="eyebrow">${icon('lock')} Perkiraan skor</p><p class="sc-lock">Terbuka setelah ${SKOR_MIN} soal di tiap subtes</p></div>
+        <div class="sc-gap"><p class="eyebrow">Target ${P.target}</p><p>${siap}/${SUBTES.length} siap</p></div>
+      </div>
+      ${skorBars()}
+      <p class="small mute">${hari}Tanpa cukup data latihan, angka skor hanya tebakan. Kerjakan soal di tiap subtes, nanti perkiraannya muncul di sini.</p>
+    </section>`;
+  }
+  const v = bulat10(pt.skor); const g = P.target - v;
   return `<section class="card score-card">
     <div class="sc-row">
-      <div><p class="eyebrow">Perkiraan skor rata-rata</p><p class="big-num">${pt.skor}<small> ±${pt.rentang}</small></p></div>
-      <div class="sc-gap"><p class="eyebrow">Target ${P.target}</p><p class="${gap > 0 ? 'neg' : 'pos'}">${gap > 0 ? 'kurang ' + gap : 'di atas target'}</p></div>
+      <div><p class="eyebrow">Perkiraan kasar skor rata-rata</p><p class="big-num"><small>≈</small>${v}</p></div>
+      <div class="sc-gap"><p class="eyebrow">Target ${P.target}</p><p class="${g > 0 ? 'neg' : 'pos'}">${g > 0 ? 'kurang ±' + g : 'di atas target'}</p></div>
     </div>
-    <div class="track" aria-hidden="true"><span class="band" style="left:${pos(pt.skor - pt.rentang).toFixed(1)}%;width:${(pos(pt.skor + pt.rentang) - pos(pt.skor - pt.rentang)).toFixed(1)}%"></span><span class="dot" style="left:${pos(pt.skor).toFixed(1)}%"></span><span class="tgt" style="left:${pos(P.target).toFixed(1)}%"></span></div>
+    <div class="track" aria-hidden="true"><span class="dot" style="left:${pos(v).toFixed(1)}%"></span><span class="tgt" style="left:${pos(P.target).toFixed(1)}%"></span></div>
     <div class="track-l small mute" aria-hidden="true"><span>200</span><span>900</span></div>
-    <p class="small mute">${dl > 0 ? `<b>D-${dl}</b> menuju UTBK ${yr} (perkiraan ${tglPendek(P.utbk)}). ` : ''}${tgt ? `Target: ${esc(tgt)}. ` : ''}Rentang menyempit seiring makin banyak soal yang kamu kerjakan.</p>
+    <p class="small mute">${hari}Dihitung dari latihanmu di Tangga, bukan skor resmi UTBK.</p>
   </section>`;
 }
 function focusCard() {
@@ -239,7 +256,7 @@ function vPeta() {
     <p class="mute">${esc(tg.kustom ? subOf(tg.s).nama : tg.judul)}</p>
     <div class="ph-stats">
       <div><b>${Math.round(m * 100)}%</b><span>penguasaan</span></div>
-      ${pr ? `<div><b>${pr.skor}</b><span>perkiraan skor</span></div>` : ''}
+      ${pr ? (skorSiap(key) ? `<div><b>≈${bulat10(pr.skor)}</b><span>perkiraan skor</span></div>` : `<div><b>${nJawab(key)}/${SKOR_MIN}</b><span>soal menuju perkiraan skor</span></div>`) : ''}
       ${isSub ? `<div>${sr ? dotsView(sr) : '<b>—</b>'}<span>penilaian diri</span></div>` : ''}
     </div>
   </section>
@@ -315,16 +332,16 @@ function vLatihan() {
     <p class="small mute">${nDrill} soal per sesi (sesuai durasi sesimu) · ${esc(subOf(sel).nama)}: ${qsOfSub(sel).length} soal tersedia.</p>
     <button class="btn primary" data-act="drill" data-s="${sel}">Mulai latihan ${icon('arrow')}</button></section>`;
   h += `<section class="card tryout-card"><div class="sec-h"><h3>${icon('clock')} Tryout mini</h3><span class="mute small">mode ujian</span></div>
-    <p>10 soal campuran dari 7 subtes, 12,5 menit — sekitar 75 detik per soal, seperti tempo UTBK. Tanpa petunjuk; pembahasan muncul di akhir.</p>
-    ${last.length ? `<ul class="to-hist">${last.map((r) => `<li><span>${tglPendek(r.d)}</span><b>${r.skor}</b><span class="mute">${r.benar}/${r.n} benar · ${Math.round(r.dtk)} dtk/soal</span></li>`).join('')}</ul>` : ''}
+    <p>10 soal campuran dari 7 subtes, 12,5 menit — sekitar 75 detik per soal. Tanpa petunjuk; pembahasan muncul di akhir. Soalnya diambil dari bank latihan Tangga, jadi ada yang mungkin pernah kamu lihat.</p>
+    ${last.length ? `<ul class="to-hist">${last.map((r) => `<li><span>${tglPendek(r.d)}</span><b>${r.benar}/${r.n}</b><span class="mute">benar · ${Math.round(r.dtk)} dtk/soal</span></li>`).join('')}</ul>` : ''}
     <button class="btn primary" data-act="tryout">Mulai tryout mini</button></section>`;
   if (due.length) h += `<button class="card row-card" data-act="ulasan">${icon('refresh')}<span><b>Ulasan jatuh tempo</b><small>${due.map((id) => esc(ATOM[id].judul)).slice(0, 3).join(', ')}${due.length > 3 ? ', …' : ''}</small></span>${icon('arrow')}</button>`;
   h += `<section class="card salah-card"><div class="sec-h"><h3>${icon('book')} Buku Salah</h3><span class="mute small">${salah.length} soal</span></div>
     <p class="small mute">Setiap jawaban salah masuk ke sini otomatis. Soal keluar dari buku setelah kamu jawab benar 2 kali berturut-turut.</p>
     ${salah.length ? `<button class="btn" data-act="uji-salah">Uji ulang ${Math.min(salah.length, 8)} soal</button>
-    <ul class="salah-list">${salah.slice(0, 8).map((e) => { const q = QB[e.q]; if (!q) return ''; const open = UI.salahOpen === e.q; return `<li><button class="sl-b" data-act="salah-buka" data-q="${e.q}" aria-expanded="${open}">${subChip(q.s)}<span>${esc(q.t.length > 90 ? q.t.slice(0, 88) + '…' : q.t)}</span><em>${e.n}× salah · ${e.ok}/2</em></button>${open ? `<div class="sl-x"><p>Jawaban: <b>${fmt(q.o[q.k])}</b></p><p>${fmt(q.b)}</p></div>` : ''}</li>`; }).join('')}</ul>` : '<p class="empty">Belum ada. Salah itu bagian dari belajar — nanti muncul di sini.</p>'}
+    <ul class="salah-list">${salah.slice(0, 8).map((e) => { const q = QB[e.q]; if (!q) return ''; const open = UI.salahOpen === e.q; return `<li><button class="sl-b" data-act="salah-buka" data-q="${e.q}" aria-expanded="${open}">${subChip(q.s)}<span>${esc(q.t.length > 90 ? q.t.slice(0, 88) + '…' : q.t)}</span><em>${e.n}× salah · ${e.ok}/2</em></button>${open ? `<div class="sl-x"><p>Jawaban: <b>${fmt(q.o[q.k])}</b></p><p>${fmt(q.b)}</p>${laporLink(e.q, 'Soal ini keliru?')}</div>` : ''}</li>`; }).join('')}</ul>` : '<p class="empty">Belum ada. Salah itu bagian dari belajar — nanti muncul di sini.</p>'}
   </section>`;
-  if (AI.ok) h += `<section class="card kt-card"><h3>${icon('spark')} Kak Tangga</h3><p>Tanya apa saja tentang materi UTBK. Kak Tangga membimbing dengan pertanyaan, bukan langsung memberi jawaban.</p>
+  if (AI.ok) h += `<section class="card kt-card"><h3>${icon('spark')} Kak Tangga</h3><p>Tanya apa saja tentang materi UTBK. Kak Tangga adalah tutor AI yang membimbing dengan pertanyaan, bukan langsung memberi jawaban.${AI.server && SRV.limit ? ` <span class="small mute">Jatah ${SRV.limit} pesan per hari.</span>` : ''}</p>
     <div class="row-btns"><button class="btn" data-act="chat">${icon('chat')} Mulai ngobrol</button>${AI.imgs ? `<button class="btn ghost" data-act="chat" data-foto="1">${icon('camera')} Foto soal</button>` : ''}</div>
     </section>`;
   return h;
@@ -365,8 +382,11 @@ function vKemajuan() {
     <div><p class="eyebrow">Kelas ${P.kelas}${P.prodi || P.ptn ? ' · ' + esc([P.prodi, P.ptn].filter(Boolean).join(' · ')) : ''}</p><h1>${esc(P.nama || 'Profilku')}</h1></div>
     <button class="icon-btn" data-act="set" aria-label="Profil dan pengaturan">${icon('gear')}</button>
   </section>`;
-  h += `<section class="card"><div class="sec-h"><h3>Perkiraan skor</h3><span class="big-num sm">${pt.skor}<small> ±${pt.rentang}</small></span></div>${chartSkor()}
-    <p class="small mute">Garis putus-putus = target ${P.target}. Titik = hasil tryout mini. Perkiraan memakai penilaian dirimu sebagai titik awal, lalu makin bersandar pada data latihan.</p></section>`;
+  h += skorSiapSemua()
+    ? `<section class="card"><div class="sec-h"><h3>Perkiraan kasar skor</h3><span class="big-num sm"><small>≈</small>${bulat10(pt.skor)}</span></div>${chartSkor()}
+    <p class="small mute">Garis putus-putus = target ${P.target}. Dihitung dari jawaban latihanmu di Tangga (penilaian dirimu hanya titik awal kecil). Ini bukan skor resmi UTBK, dan soal UTBK asli bisa berbeda.</p></section>`
+    : `<section class="card score-card locked"><div class="sec-h"><h3>${icon('lock')} Perkiraan skor</h3><span class="small mute">${SUBTES.filter((x) => skorSiap(x.id)).length}/${SUBTES.length} subtes siap</span></div>
+    <p class="small">Perkiraan skor terbuka setelah kamu mengerjakan <b>${SKOR_MIN} soal di tiap subtes</b>. Sebelum itu, angka skor hanya tebakan — jadi tidak kami tampilkan.</p>${skorBars()}</section>`;
   h += `<section class="card tracker"><div class="sec-h"><h3>Pelacak subtes</h3><button class="link" data-act="cekdiri">Cek diri</button></div>
     <p class="small mute">Penilaian dirimu: <b>1</b> = belum paham sama sekali, <b>5</b> = siap UTBK. Ketuk angka untuk memperbarui. Data latihan ditampilkan di sampingnya sebagai pembanding.</p>
     <ul class="trk-list">${trackerRows()}</ul></section>`;
@@ -390,6 +410,7 @@ function vKemajuan() {
   h += `<section class="card" id="data-card"><h3>Data & penyimpanan</h3><p>${Cloud.on ? `${icon('check')} Progres tersimpan di akun Claude-mu, jadi ikut terbawa ke perangkat lain.` : (NATIVE ? 'Progres tersimpan di HP ini saja — tanpa akun, tanpa dikirim ke mana pun.' : 'Progres tersimpan di browser perangkat ini saja — tanpa akun, tanpa dikirim ke mana pun.')}${Cloud.err && Cloud.on ? ' <span class="warn-t">Penyimpanan terakhir gagal; akan dicoba lagi.</span>' : ''}</p>
     ${Cloud.on || IN_CLAUDE ? '' : `<p class="small ${backupStale() ? 'warn-t' : 'mute'}">${S.cadangan ? `Cadangan terakhir: ${tglPendek(S.cadangan)}.` : 'Belum pernah dicadangkan.'} ${NATIVE ? 'Simpan cadangan sesekali (mis. ke Google Drive) supaya progresmu aman saat ganti HP.' : 'Unduh cadangan sesekali supaya progresmu aman saat ganti HP atau data browser terhapus.'}</p>`}
     <div class="row-btns">${backupBtns()}<button class="btn sm ghost" data-act="salin-ringkasan">${icon('copy')} Salin ringkasan untuk orang tua/guru</button><button class="btn sm ghost" data-act="set">${icon('gear')} Pengaturan</button></div></section>`;
+  h += `<section class="card"><h3>${icon('chat')} Ada saran atau keluhan?</h3><p class="small">Pembuat Tangga membaca setiap masukan. Ceritakan apa yang membantu dan apa yang membingungkan.</p><div class="row-btns"><button class="btn sm" data-act="masukan">Kirim masukan</button><a class="btn sm ghost" href="privasi.html" target="_blank" rel="noopener">${icon('lock')} Privasi</a></div></section>`;
   return h;
 }
 function trackerRows() {
@@ -403,7 +424,7 @@ function trackerRows() {
     return `<li class="trk${weak ? ' weak' : ''}" style="--h:${r.x.hue}">
       <div class="trk-h">${subChip(r.x.id)}<span class="trk-n">${esc(r.x.nama)}</span>${weak ? '<span class="pill warn">perlu ditingkatkan</span>' : ''}</div>
       <div class="trk-b">${rateButtons(r.x.id, r.v)}${ch}${sparkSelf(r.x.id)}</div>
-      <p class="small mute">${r.da ? `Data latihan: ${Math.round(r.da.acc * 100)}% benar dari ${r.da.n} soal` : 'Belum ada data latihan'} · perkiraan skor ${r.pr.skor}${cal}</p>
+      <p class="small mute">${r.da ? `Data latihan: ${Math.round(r.da.acc * 100)}% benar dari ${r.da.n} soal` : 'Belum ada data latihan'} · ${skorSiap(r.x.id) ? `perkiraan skor ≈${bulat10(r.pr.skor)}` : `${Math.min(nJawab(r.x.id), SKOR_MIN)}/${SKOR_MIN} soal menuju perkiraan skor`}${cal}</p>
     </li>`;
   }).join('');
 }
@@ -412,8 +433,7 @@ function chartSkor() {
   if (pts.length < 2) return '<p class="empty">Grafik muncul setelah 2 hari data.</p>';
   const W = 340, H = 160, pl = 34, pr = 12, ptp = 14, pb = 24;
   const from = pts[0].d;
-  const tos = S.tryout.filter((r) => r.d >= from);
-  const vals = pts.map((p) => p.v).concat([S.profil.target], tos.map((r) => r.skor));
+  const vals = pts.map((p) => p.v).concat([S.profil.target]);
   const lo = Math.floor((Math.min(...vals) - 15) / 50) * 50; const hi = Math.ceil((Math.max(...vals) + 15) / 50) * 50;
   const span = Math.max(1, diffDays(from, pts[pts.length - 1].d));
   const X = (d) => pl + (diffDays(from, d) / span) * (W - pl - pr); const Y = (v) => ptp + (1 - (v - lo) / (hi - lo)) * (H - ptp - pb);
@@ -427,7 +447,6 @@ function chartSkor() {
     ${grid}
     <line x1="${pl}" x2="${W - pr}" y1="${Y(tg).toFixed(1)}" y2="${Y(tg).toFixed(1)}" class="tl"/><text x="${W - pr}" y="${(Y(tg) - 5).toFixed(1)}" class="tlt">target</text>
     <path d="${area}" class="ar"/><path d="${line}" class="ln"/>
-    ${tos.map((r) => `<circle cx="${X(r.d).toFixed(1)}" cy="${Y(r.skor).toFixed(1)}" r="3.5" class="to"/>`).join('')}
     <circle cx="${X(last.d).toFixed(1)}" cy="${Y(last.v).toFixed(1)}" r="4.5" class="end"/>
     <text x="${pl}" y="${H - 6}" class="xl">${tglPendek(pts[0].d)}</text><text x="${W - pr}" y="${H - 6}" class="xl r">${tglPendek(last.d)}</text>
   </svg>`;
@@ -443,7 +462,7 @@ function laporanCard() {
   items.push(`Kamu menjawab <b>${w1.n} soal</b> minggu ini${w0.n ? ` (minggu lalu ${w0.n})` : ''}.`);
   if (w1.acc != null) items.push(`Akurasi <b>${pct(w1.acc)}</b>${w0.acc != null ? ` (${w1.acc >= w0.acc ? 'naik' : 'turun'} dari ${pct(w0.acc)})` : ''}.`);
   if (w1.dtk != null) items.push(`Rata-rata <b>${Math.round(w1.dtk)} detik</b> per soal${w0.dtk != null ? `, ${w1.dtk <= w0.dtk ? 'lebih cepat' : 'lebih lambat'} ${Math.abs(Math.round(w0.dtk - w1.dtk))} detik dari minggu lalu` : ''}.`);
-  if (sNow != null && sOld != null) items.push(`Perkiraan skor <b>${sOld} → ${sNow}</b>.`);
+  if (sNow != null && sOld != null) items.push(`Perkiraan kasar skor <b>≈${bulat10(sOld)} → ≈${bulat10(sNow)}</b>.`);
   items.push(lulus.length ? `Anak tangga baru yang Cakap: ${lulus.map((j) => `<b>${esc(j)}</b>`).join(', ')}.` : 'Belum ada anak tangga baru yang lulus minggu ini.');
   if (weakId && ATOM[weakId]) items.push(`Paling sering salah di: <b>${esc(ATOM[weakId].judul)}</b>. Ulangi anak tangga itu atau buka Buku Salah.`);
   return `<section class="card report"><div class="sec-h"><h3>Laporan minggu ini</h3><span class="small mute">${tglPendek(from)}–${tglPendek(t)}</span></div><ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul></section>`;
@@ -479,7 +498,7 @@ const isAndroid = () => /android/i.test(navigator.userAgent);
 function installCard() {
   if (IN_CLAUDE || NATIVE || isStandalone() || INSTALL.done) return '';
   const apk = apkUrl();
-  if (apk && isAndroid()) return `<section class="card install-card"><h3>${icon('phone')} Pasang aplikasi Android</h3><p class="small">Dengan pengingat harian dan tetap jalan tanpa sinyal. Unduh, lalu buka file-nya untuk memasang. Progres di browser bisa dipindah lewat <b>Unduh cadangan</b> di Kemajuan.</p><div class="row-btns"><a class="btn primary sm" href="${apk}" rel="noopener">${icon('download')} Unduh APK</a>${INSTALL.evt ? '<button class="btn sm ghost" data-act="pasang">Pasang versi web</button>' : ''}</div></section>`;
+  if (apk && isAndroid()) return `<section class="card install-card"><h3>${icon('phone')} Pasang aplikasi Android</h3><p class="small">Dengan pengingat harian dan tetap jalan tanpa sinyal. Unduh, lalu buka file-nya untuk memasang. Progres di browser bisa dipindah lewat <b>Unduh cadangan</b> di Kemajuan.</p><div class="row-btns"><a class="btn primary sm" href="${apk}" rel="noopener">${icon('download')} Unduh APK</a>${INSTALL.evt ? '<button class="btn sm ghost" data-act="pasang">Pasang versi web</button>' : ''}</div><p class="small mute">HP-mu menolak APK atau meminta langkah rumit? Pakai versi web saja: menu Chrome ⋮ → <b>Tambahkan ke layar utama</b>. Isinya sama.</p></section>`;
   if (INSTALL.evt) return `<section class="card install-card"><h3>${icon('phone')} Pasang Tangga di HP</h3><p class="small">Buka langsung dari layar utama seperti aplikasi biasa, tetap jalan walau sinyal hilang.</p><button class="btn primary sm" data-act="pasang">${icon('download')} Pasang aplikasi</button></section>`;
   if (isIOS()) return `<section class="card install-card"><h3>${icon('phone')} Pasang Tangga di iPhone</h3><p class="small">Di Safari, ketuk tombol <b>Bagikan</b> lalu pilih <b>Tambahkan ke Layar Utama</b>. Tangga akan terbuka seperti aplikasi dan progresmu lebih awet tersimpan.</p></section>`;
   return '';
@@ -506,6 +525,10 @@ function shSet() {
     <span class="lbl">Petunjuk</span>${seg('petunjuk', [['banyak', 'Banyak'], ['sebagian', 'Sebagian'], ['tidak', 'Tanpa']])}
     ${NATIVE ? `<span class="lbl">Pengingat harian</span><div class="seg" role="group">${INGAT_JAM.map(([v, l]) => `<button type="button" class="${String(S.set.ingat || 'off') === v ? 'on' : ''}" aria-pressed="${String(S.set.ingat || 'off') === v}" data-act="ingat" data-v="${v}">${l}</button>`).join('')}</div><p class="small mute">Notifikasi hanya muncul kalau streak hari itu belum aman.</p>` : ''}
     ${AI.ok ? `<span class="lbl">Bahasa Kak Tangga</span>${seg('bahasa', [['id', 'Indonesia'], ['campur', 'Campur Inggris']])}` : ''}
+    ${AI.server ? `<h4>Kak Tangga (AI)</h4><p class="small mute">${S.set.aiSetuju ? `Aktif sejak ${tglPendek(S.set.aiSetuju)}.` : 'Belum diaktifkan — kamu akan ditanya dulu saat pertama memakainya.'} Jatah ${SRV.limit || '—'} pesan per hari${SRV.left != null ? `, sisa hari ini ${SRV.left}` : ''}.</p>${S.set.aiSetuju ? '<div class="row-btns"><button type="button" class="btn sm ghost" data-act="ai-tarik">Tarik persetujuan</button></div>' : ''}` : ''}
+    <h4>Bantuan & privasi</h4>
+    <div class="row-btns"><button type="button" class="btn sm" data-act="masukan">${icon('chat')} Kirim masukan</button><a class="btn sm ghost" href="privasi.html" target="_blank" rel="noopener">${icon('lock')} Kebijakan privasi</a></div>
+    <p class="small mute">Kode perangkat: <code>${esc(deviceId().slice(-8))}</code> — sebutkan kode ini kalau minta datamu dihapus.</p>
     ${DEV || S.demoOffset ? `<h4>Alat uji draf</h4>
     <p class="small mute">Untuk mencoba streak dan ulasan tanpa menunggu besok.</p>
     <div class="row-btns"><button type="button" class="btn sm" data-act="lompat-hari">${icon('calendar')} Lompat ke besok</button>${S.demoOffset ? `<button type="button" class="btn sm ghost" data-act="kembali-hari">Kembali ke hari ini (+${S.demoOffset} hari)</button>` : ''}</div>` : ''}

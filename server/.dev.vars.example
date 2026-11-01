@@ -1,0 +1,4 @@
+# Salin menjadi .dev.vars untuk menjalankan server di komputer sendiri (npx wrangler dev).
+# File .dev.vars tidak ikut masuk Git.
+ANTHROPIC_API_KEY=sk-ant-...
+ADMIN_KEY=ganti-dengan-kata-sandi-panjang

@@ -1,0 +1,14 @@
+{
+  "name": "tangga-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Server Tangga: Kak Tangga (Claude), laporan kesalahan, dan hitungan pemakaian anonim. Cloudflare Worker + Durable Object (SQLite).",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.156.0"
+  }
+}

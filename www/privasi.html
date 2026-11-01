@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privasi — Tangga UTBK</title>
+<meta name="description" content="Data apa yang disimpan dan dikirim oleh aplikasi Tangga UTBK.">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<style>
+  @font-face { font-family: 'Jakarta'; src: url('fonts/plus-jakarta-sans-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+  @font-face { font-family: 'Jakarta'; src: url('fonts/plus-jakarta-sans-latin-700-normal.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+  :root { --paper: #F4F3EC; --sheet: #FFFFFF; --ink: #1B1F25; --ink-2: #5A616B; --line: #DADBE0; --pen: #2142D3; }
+  @media (prefers-color-scheme: dark) { :root { --paper: #14201B; --sheet: #1B2A24; --ink: #EBF0E9; --ink-2: #A2B1A9; --line: #2E4139; --pen: #93A9FF; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.6 Jakarta, system-ui, sans-serif; }
+  main { max-width: 680px; margin: 0 auto; padding: 24px 18px 48px; }
+  h1 { font-size: 28px; line-height: 1.2; letter-spacing: -.02em; margin: 8px 0 4px; }
+  h2 { font-size: 18px; margin: 28px 0 6px; }
+  p, li { color: var(--ink); }
+  .mute { color: var(--ink-2); font-size: 14px; }
+  .box { background: var(--sheet); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  ul { padding-left: 20px; }
+  li { margin: 4px 0; }
+  a { color: var(--pen); }
+  .back { display: inline-block; margin-bottom: 8px; font-weight: 700; text-decoration: none; }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="./">← Kembali ke Tangga</a>
+  <h1>Privasi di Tangga</h1>
+  <p class="mute">Terakhir diperbarui: 1 November 2026</p>
+
+  <div class="box">
+    <p><b>Singkatnya:</b> progres belajarmu tersimpan di perangkatmu sendiri. Tangga tidak memakai akun, tidak menampilkan iklan, dan tidak menjual data. Hanya sedikit data yang dikirim ke server Tangga, dan semuanya dijelaskan di bawah.</p>
+  </div>
+
+  <h2>1. Yang tersimpan di perangkatmu saja</h2>
+  <ul>
+    <li>Nama panggilan, kelas, kampus dan prodi impian, serta target skor yang kamu isi.</li>
+    <li>Jawaban latihan, streak, kartu, dan pengaturan.</li>
+  </ul>
+  <p>Data ini tidak dikirim ke mana pun. Kalau kamu membuat file cadangan, file itu tersimpan di tempat yang kamu pilih sendiri. Untuk menghapus semuanya: <b>Kemajuan → Pengaturan → Hapus semua data</b>.</p>
+
+  <h2>2. Yang dikirim ke server Tangga</h2>
+  <ul>
+    <li><b>Hitungan pengguna harian.</b> Sekali sehari aplikasi mengirim kode perangkat acak (dibuat di HP-mu, tidak terkait nama atau akun), versi aplikasi, jenis perangkat (web atau Android), dan kelas (11 atau 12). Gunanya untuk tahu berapa orang yang memakai Tangga. Dihapus otomatis setelah sekitar 6 bulan tidak aktif.</li>
+    <li><b>Laporan dan masukan</b> yang kamu kirim sendiri, bersama kode perangkat dan versi aplikasi. Laporan tentang jawaban Kak Tangga ikut menyertakan jawaban itu dan pertanyaanmu sebelumnya.</li>
+    <li><b>Pesan ke Kak Tangga.</b> Lihat bagian 3.</li>
+  </ul>
+  <p>Server juga memakai alamat IP untuk membatasi pemakaian berlebihan. Alamat IP disimpan hanya sebagai sandi acak (hash) yang berganti setiap hari, lalu dihapus setelah beberapa hari.</p>
+
+  <h2>3. Kak Tangga (tutor AI)</h2>
+  <ul>
+    <li>Kak Tangga adalah <b>AI, bukan manusia</b>. Jawabannya bisa keliru.</li>
+    <li>Saat kamu bertanya, pesanmu (beserta beberapa pesan sebelumnya, materi yang sedang kamu pelajari, dan foto soal kalau kamu mengirimnya) diteruskan oleh server Tangga ke <b>Claude</b>, AI buatan Anthropic, untuk dibuatkan jawaban. Nama panggilanmu tidak ikut dikirim.</li>
+    <li>Server Tangga <b>tidak menyimpan isi obrolan</b>. Yang dicatat hanya jumlah pesan per hari dan ukuran pesan (untuk jatah harian dan biaya).</li>
+    <li>Anthropic memproses pesan sesuai <a href="https://www.anthropic.com/legal/privacy" rel="noopener">kebijakan privasinya</a>.</li>
+    <li>Pengguna di bawah 18 tahun diminta menyatakan bahwa orang tua atau walinya sudah tahu dan mengizinkan sebelum memakai Kak Tangga.</li>
+    <li>Jangan kirim data pribadi seperti nama lengkap, alamat, nomor HP, nama sekolah, atau foto wajah.</li>
+  </ul>
+
+  <h2>4. Layanan pihak lain yang dipakai</h2>
+  <ul>
+    <li><b>GitHub Pages</b> menyajikan situs ini dan file aplikasi Android (<a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">kebijakan privasi GitHub</a>).</li>
+    <li><b>Cloudflare</b> menjalankan server Tangga (<a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">kebijakan privasi Cloudflare</a>).</li>
+    <li><b>Anthropic</b> menjalankan Claude untuk Kak Tangga (lihat bagian 3).</li>
+  </ul>
+
+  <h2>5. Hakmu</h2>
+  <p>Kamu boleh berhenti memakai Tangga kapan saja dan menghapus data di perangkat lewat Pengaturan. Untuk minta data di server (laporan, hitungan harian) dihapus, kirim masukan lewat aplikasi dan sebutkan <b>kode perangkat</b> yang tertera di Pengaturan. Tangga berupaya mematuhi Undang-Undang Nomor 27 Tahun 2022 tentang Pelindungan Data Pribadi.</p>
+
+  <h2>6. Keadaan darurat</h2>
+  <p>Tangga adalah aplikasi belajar, bukan layanan bantuan. Kalau kamu sedang dalam bahaya atau ingin menyakiti diri sendiri, bicaralah dengan orang dewasa yang kamu percaya, atau hubungi <b>112</b>.</p>
+
+  <h2>7. Kontak</h2>
+  <p>Pertanyaan tentang privasi bisa dikirim lewat <b>Kemajuan → Kirim masukan</b> di aplikasi.</p>
+</main>
+</body>
+</html>

@@ -234,6 +234,13 @@ function mastery(key) { const t = TANGGA[key]; if (!t || !t.atoms.length) return
 
 /* ---------- model belajar (rating ala Elo → perkiraan skor) ---------- */
 const ability = (s) => S.ability[s] || (S.ability[s] = { r: 1000, n: 0 });
+/* Perkiraan skor baru ditampilkan setelah cukup jawaban latihan di subtes itu.
+   Sebelumnya angkanya hanya tebakan dari penilaian diri, jadi tidak ditampilkan. */
+const SKOR_MIN = 20;
+const nJawab = (s) => (S.ability[s] && S.ability[s].n) || 0;
+const skorSiap = (s) => nJawab(s) >= SKOR_MIN;
+const skorSiapSemua = () => SUBTES.every((x) => skorSiap(x.id));
+const bulat10 = (v) => Math.round(v / 10) * 10;   // perkiraan kasar: jangan pura-pura presisi
 const itemR = (q) => [0, 850, 1000, 1150][q.d || 2] + (S.itemAdj[q.id] || 0);
 const pCorrect = (r, d) => 1 / (1 + Math.pow(10, (d - r) / 400));
 /* Pilih soal dengan peluang benar paling dekat 77,5% (zona 70–85%). */
@@ -267,7 +274,7 @@ function prediksi(s) {
   const prior = 380 + 45 * (selfOf(s) || 3);
   const mastered = TANGGA[s] ? TANGGA[s].atoms.filter((id) => lvl(id) >= 3).length : 0;
   const n = ab.n + mastered * 3;
-  const w = n / (n + 20);
+  const w = n / (n + 8);   // data latihan cepat mengalahkan penilaian diri
   return { skor: Math.round(clamp(prior * (1 - w) + model * w, 200, 950)), rentang: Math.round(18 + 110 / Math.sqrt(n + 1)), n };
 }
 function prediksiTotal() {
@@ -280,6 +287,8 @@ function prediksiTotal() {
 }
 function snapSkor() {
   if (!S.onboarded) return;
+  /* Riwayat skor baru dicatat setelah perkiraan terbuka (cukup data di semua subtes). */
+  if (!skorSiapSemua()) { if (S.skor.length) S.skor = []; return; }
   const t = today(); const v = prediksiTotal().skor; const last = S.skor[S.skor.length - 1];
   if (last && last.d === t) last.v = v; else S.skor.push({ d: t, v });
   if (S.skor.length > 400) S.skor.splice(0, S.skor.length - 400);

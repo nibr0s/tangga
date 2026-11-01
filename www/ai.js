@@ -5,22 +5,41 @@
    Memakai kemampuan `sample` (Claude) dari halaman artefak.
    ===================================================================== */
 
-const AI = { s: null, ok: false, imgs: false, types: [], off: false };
+const AI = { s: null, ok: false, imgs: false, types: [], off: false, server: false };
 
 async function initAI() {
   const C = window.claude;
-  if (!C || typeof C.use !== 'function') return;
-  let s = null;
-  try { s = await C.use('sample'); } catch (e) { s = null; }
-  if (!s) return;
-  AI.s = s; AI.ok = true;
-  try { const lim = await s.limits(); AI.imgs = !!(lim && lim.images); AI.types = (lim && lim.images && lim.images.mediaTypes) || []; } catch (e) { AI.imgs = false; }
+  if (C && typeof C.use === 'function') {
+    let s = null;
+    try { s = await C.use('sample'); } catch (e) { s = null; }
+    if (!s) return;
+    AI.s = s; AI.ok = true;
+    try { const lim = await s.limits(); AI.imgs = !!(lim && lim.images); AI.types = (lim && lim.images && lim.images.mediaTypes) || []; } catch (e) { AI.imgs = false; }
+    renderAll(); if (SH) renderSheet(); if (OV) renderOv();
+    return;
+  }
+  /* versi web & Android: Kak Tangga lewat server Tangga (kalau alamatnya diisi di config.js) */
+  if (!SRV.on || AI.ok) return;
+  if (!(await srvStatus())) { window.addEventListener('online', () => { if (!AI.ok) initAI(); }, { once: true }); return; }
+  if (!SRV.ai) return;
+  AI.s = srvSampler(); AI.ok = true; AI.server = true; AI.imgs = SRV.imgs; AI.types = ['image/jpeg', 'image/png', 'image/webp'];
   renderAll(); if (SH) renderSheet(); if (OV) renderOv();
+}
+/* Pemakaian pertama Kak Tangga lewat server: tampilkan dulu siapa Kak Tangga, aturan aman, dan izin orang tua. */
+function perluSetuju(act, d) {
+  if (!AI.server || S.set.aiSetuju) return false;
+  openSheet('aisetuju', { umur: null, izin: false, next: { act, d: Object.assign({}, d || {}) } });
+  return true;
 }
 function aiMsg(e) {
   const c = e && e.code;
   if (['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed'].includes(c)) { AI.ok = false; AI.off = true; return 'Kak Tangga belum diizinkan di tampilan ini.'; }
   if (c === 'cancelled') return '';
+  if (c === 'quota_device') return `Jatah Kak Tangga-mu hari ini sudah habis${SRV.limit ? ` (${SRV.limit} pesan)` : ''}. Besok bisa lagi, ya!`;
+  if (c === 'quota_global' || c === 'paused') return 'Kak Tangga sedang istirahat karena hari ini banyak yang bertanya. Coba lagi besok.';
+  if (c === 'quota_ip') return 'Terlalu banyak permintaan dari jaringan ini hari ini. Coba lagi besok.';
+  if (c === 'offline') return 'Kak Tangga butuh internet. Coba lagi saat ada sinyal.';
+  if (c === 'origin_not_allowed') return 'Kak Tangga belum diizinkan di alamat ini.';
   if (c === 'images_unavailable') { AI.imgs = false; return 'Foto belum bisa dikirim di tampilan ini.'; }
   if (c === 'image_rejected') return 'Fotonya tidak bisa dibaca. Coba foto lain (JPG atau PNG).';
   if (c === 'rate_limited') return 'Kak Tangga sedang sibuk atau batas pemakaianmu tercapai. Coba lagi nanti.';
@@ -44,7 +63,8 @@ function tutorRules(ctxId) {
   }
   const recent = LOG.filter((e) => e.src !== 'kartu' && !e.y && QB[e.q]).slice(-3).map((e) => QB[e.q].t.slice(0, 120));
   const weak = recent.length ? `\nSoal yang baru-baru ini dijawab salah oleh murid: ${recent.map((t) => `“${t}”`).join('; ')}` : '';
-  return `Kamu adalah “Kak Tangga”, tutor AI di aplikasi belajar UTBK-SNBT bernama Tangga. Muridmu siswa SMA kelas ${P.kelas} di Indonesia bernama ${firstName()}.
+  /* lewat server, nama murid tidak dikirim (data seminimal mungkin) */
+  return `Kamu adalah “Kak Tangga”, tutor AI di aplikasi belajar UTBK-SNBT bernama Tangga. Muridmu siswa SMA kelas ${P.kelas} di Indonesia${AI.server ? '' : ` bernama ${firstName()}`}.
 Cara mengajar (Metode Tangga):
 - Apa pun bisa dipelajari asal langkahnya cukup kecil. Jika murid bingung, turun satu anak tangga: cari konsep prasyarat yang belum kokoh dan jelaskan itu dulu.
 - Gaya penjelasan favorit murid: ${GAYA[S.set.gaya]}.
@@ -72,8 +92,9 @@ function shChat() {
   const ctx = CHAT.ctx && ATOM[CHAT.ctx];
   let h = `<div class="sh-head chat-head"><p class="eyebrow">${icon('spark')} Tutor AI</p><h2>Kak Tangga</h2>${ctx ? `<p class="ctx-chip">Sedang membahas: <b>${esc(ctx.judul)}</b> <button class="link" data-act="chat-ctx-clear">lepas</button></p>` : ''}</div>`;
   if (!AI.ok) {
-    return h + `<div class="chat-off"><p>${AI.off ? 'Kak Tangga belum diizinkan di tampilan ini. Izinkan saat diminta, lalu coba lagi.' : 'Kak Tangga aktif saat aplikasi ini dibuka di Claude, memakai akun Claude-mu.'}</p><p class="small mute">Di aplikasi final, Kak Tangga berjalan di server Tangga sehingga semua siswa bisa memakainya tanpa akun Claude.</p></div>`;
+    return h + `<div class="chat-off"><p>${AI.off ? 'Kak Tangga belum diizinkan di tampilan ini. Izinkan saat diminta, lalu coba lagi.' : SRV.on ? 'Kak Tangga sedang tidak bisa dihubungi. Cek internetmu, lalu coba lagi.' : 'Kak Tangga belum aktif di versi ini.'}</p></div>`;
   }
+  h += `<p class="ai-note">${icon('spark')}<span><b>Kak Tangga adalah AI, bukan manusia.</b> Jawabannya bisa keliru — cek lagi kalau ragu.${AI.server && SRV.left != null ? ` Sisa jatah hari ini: <b>${SRV.left}</b> pesan.` : ''}</span></p>`;
   h += `<div class="chat-log" id="chat-log">${chatLogHTML()}</div>`;
   h += `<div class="chat-chips">${chatChips().map((c) => `<button type="button" class="tchip" data-act="chat-chip" data-t="${esc(c)}"${CHAT.busy ? ' disabled' : ''}>${esc(c)}</button>`).join('')}</div>`;
   const types = (AI.types.length ? AI.types : ['image/jpeg', 'image/png', 'image/webp']).join(',');
@@ -88,7 +109,8 @@ function chatLogHTML() {
   return hello + CHAT.turns.map((t, i) => {
     if (t.role === 'user') return `<div class="bubble me" data-i="${i}">${t.img ? `<span class="img-tag">${icon('camera')} foto soal</span>` : ''}<p>${esc(t.content)}</p></div>`;
     const inner = t.pending && !t.content ? '<p class="typing">Kak Tangga sedang berpikir…</p>' : `<div class="md">${fmtAI(t.content)}</div>`;
-    return `<div class="bubble bot" data-i="${i}">${inner}${t.err ? `<p class="warn-t small">${esc(t.err)}</p>` : ''}</div>`;
+    const lapor = !t.pending && t.content && !CHAT.busy ? `<button type="button" class="link lapor-l" data-act="chat-lapor" data-i="${i}">${icon('flag')} Laporkan jawaban ini</button>` : '';
+    return `<div class="bubble bot" data-i="${i}">${inner}${t.err ? `<p class="warn-t small">${esc(t.err)}</p>` : ''}${lapor}</div>`;
   }).join('');
 }
 function scrollChat() { const l = $('#chat-log'); if (l) l.scrollTop = l.scrollHeight; }
@@ -108,9 +130,12 @@ async function chatSend(text, images) {
   const ctl = new AbortController(); CHAT.ctl = ctl;
   const hist = CHAT.turns.slice(0, -1).filter((t) => t.content && !t.err).slice(-12)
     .map((t) => ({ role: t.role, content: t.role === 'user' && t.img ? t.content + '\n[Murid melampirkan foto soal.]' : t.content }));
-  const input = [{ role: 'user', content: tutorRules(CHAT.ctx) }].concat(hist);
+  /* lewat server, aturan tutor dikirim sebagai `system`; di Claude, sebagai pesan pertama */
+  const rules = tutorRules(CHAT.ctx);
+  const input = AI.server ? hist.slice() : [{ role: 'user', content: rules }].concat(hist);
   if (images) input[input.length - 1] = { role: 'user', content: input[input.length - 1].content + '\n\n' + PHOTO_TASK };
   const opts = { cache: false, signal: ctl.signal, onText: ({ text: tx }) => { b.content = tx; b.pending = false; updBubble(bi); } };
+  if (AI.server) opts.system = rules;
   if (images) opts.images = images;
   try {
     const res = await AI.s(input, opts);
@@ -143,6 +168,8 @@ Aturan:
 - Bahasa Indonesia yang ramah (aku–kamu)${en ? '; bacaan, soal, dan pilihan jawaban dalam bahasa Inggris, sedangkan penjelasan dan pembahasan dalam bahasa Indonesia' : ''}.
 - Desimal memakai koma (0,8). Tanpa LaTeX; pakai simbol biasa (×, ÷, ≤, ⇒). Boleh **tebal** untuk istilah penting.
 - Soal bergaya UTBK-SNBT: 5 pilihan, tepat SATU jawaban benar, pengecoh masuk akal dan mencerminkan kesalahan umum. Hitung ulang setiap jawaban sebelum menuliskannya.
+- Urutan pilihan akan diacak di aplikasi. Di pembahasan "b", sebut ISI pilihan yang dimaksud, jangan hurufnya (A–E).
+- Untuk arti kata, ikuti KBBI (mis. "acuh" = peduli; "tak acuh" = tidak peduli).
 - Jika soal butuh bacaan, taruh bacaan pendek (≤ 90 kata) di field "p".
 - "x" memetakan indeks pilihan yang SALAH ke id anak tangga prasyarat yang kemungkinan belum kokoh jika murid memilihnya. Pakai hanya id dari daftar di atas; boleh {}.
 

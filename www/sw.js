@@ -1,9 +1,9 @@
 /* Tangga — service worker: menyimpan aplikasi di perangkat supaya bisa dibuka tanpa sinyal.
    Ganti VERSI setiap kali file aplikasi berubah agar HP murid mengambil versi baru. */
-const VERSI = 'tangga-2026-10-31-belajar-1';
+const VERSI = 'tangga-2026-11-01-perbaikan-1';
 const FILES = [
-  './', 'index.html', 'styles.css', 'manifest.webmanifest',
-  'content.js', 'content2.js', 'core.js', 'figs.js', 'materi.js', 'materi-1.js', 'materi-2.js', 'materi-3.js',
+  './', 'index.html', 'styles.css', 'manifest.webmanifest', 'privasi.html',
+  'config.js', 'content.js', 'content2.js', 'core.js', 'server.js', 'figs.js', 'materi.js', 'materi-1.js', 'materi-2.js', 'materi-3.js',
   'ui.js', 'play.js', 'ai.js', 'native.js', 'app.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png',
   'fonts/plus-jakarta-sans-latin-400-normal.woff2', 'fonts/plus-jakarta-sans-latin-500-normal.woff2',
@@ -35,7 +35,16 @@ self.addEventListener('fetch', (e) => {
   if (url.origin !== self.location.origin) return;
   if (req.mode === 'navigate') {
     /* Halaman: pakai salinan di perangkat, ambil dari jaringan bila belum ada. */
-    e.respondWith(caches.match('index.html').then((m) => m || fetch(req)));
+    const page = url.pathname.endsWith('/privasi.html') ? 'privasi.html' : 'index.html';
+    e.respondWith(caches.match(page).then((m) => m || fetch(req)));
+    return;
+  }
+  if (url.pathname.endsWith('/config.js')) {
+    /* Pengaturan server: utamakan versi terbaru dari jaringan, salinan di perangkat hanya cadangan. */
+    e.respondWith(fetch(req).then((res) => {
+      if (res && res.ok) { const copy = res.clone(); caches.open(VERSI).then((c) => c.put(req, copy)); }
+      return res;
+    }).catch(() => caches.match(req, { ignoreSearch: true })));
     return;
   }
   e.respondWith(

@@ -1,0 +1,82 @@
+# Memasang server Tangga (folder server/) ke Cloudflare Workers.
+# Butuh 4 repository secrets (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, ANTHROPIC_API_KEY, TANGGA_ADMIN_KEY
+# Tanpa secrets ini, workflow hanya memberi peringatan dan tidak memasang apa pun.
+# Panduan lengkap: docs/SETUP-AI.md
+name: Server
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - '.github/workflows/server.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: server
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check secrets
+        id: cek
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$CF_TOKEN" ] && [ -n "$CF_ACCOUNT" ]; then
+            echo "siap=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Secret CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID belum ada — server tidak dipasang. Lihat docs/SETUP-AI.md."
+          fi
+
+      - uses: actions/setup-node@v7
+        if: steps.cek.outputs.siap == '1'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install Wrangler
+        if: steps.cek.outputs.siap == '1'
+        run: npm ci
+
+      - name: Deploy to Cloudflare Workers
+        if: steps.cek.outputs.siap == '1'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy
+
+      - name: Upload secrets (Claude API key, admin key)
+        if: steps.cek.outputs.siap == '1'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ADMIN_KEY: ${{ secrets.TANGGA_ADMIN_KEY }}
+        run: |
+          node -e '
+            const o = {};
+            if (process.env.ANTHROPIC_API_KEY) o.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+            if (process.env.ADMIN_KEY) o.ADMIN_KEY = process.env.ADMIN_KEY;
+            if (!Object.keys(o).length) { console.error("Tidak ada secret untuk diunggah."); process.exit(0); }
+            require("fs").writeFileSync(process.env.RUNNER_TEMP + "/secrets.json", JSON.stringify(o));
+          '
+          if [ -f "$RUNNER_TEMP/secrets.json" ]; then
+            npx wrangler secret bulk "$RUNNER_TEMP/secrets.json"
+            rm -f "$RUNNER_TEMP/secrets.json"
+          fi
+          echo "::notice::Server terpasang. Alamatnya ada di log langkah 'Deploy' (…workers.dev). Tempel ke www/config.js."

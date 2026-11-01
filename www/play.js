@@ -34,8 +34,10 @@ function fbBlock(cur, sel, ft) {
   const q = cur.q; const orig = cur.perm[sel]; const y = orig === q.k;
   const dg = !y && q.x ? q.x[orig] : null;
   const diag = dg && ATOM[dg] ? `<p class="diag">${icon('down')} Sepertinya anak tangga <b>${esc(ATOM[dg].judul)}</b> belum kokoh.</p>` : '';
-  return `<div class="fb ${y ? 'ok' : 'no'}" role="status"><p class="fb-t hand">${ft}</p>${y ? '' : `<p class="fb-k">Jawaban benar: <b>${LETTERS[cur.perm.indexOf(q.k)]}. ${fmt(q.o[q.k])}</b></p>`}<p class="fb-b">${fmt(q.b)}</p>${diag}</div>`;
+  return `<div class="fb ${y ? 'ok' : 'no'}" role="status"><p class="fb-t hand">${ft}</p>${y ? '' : `<p class="fb-k">Jawaban benar: <b>${LETTERS[cur.perm.indexOf(q.k)]}. ${fmt(q.o[q.k])}</b></p>`}<p class="fb-b">${fmt(q.b)}</p>${diag}${laporLink(q.id, 'Soal ini keliru?')}</div>`;
 }
+/* tautan kecil "laporkan" untuk soal, materi, atau bagian materi */
+const laporLink = (ref, label) => `<button type="button" class="link lapor-l" data-act="lapor" data-jenis="konten" data-ref="${esc(ref)}">${icon('flag')} ${label || 'Laporkan kesalahan'}</button>`;
 function hintOf(q) { if (q.h) return q.h; const L = q.a ? lessonOf(q.a) : null; return L ? L.jelas.singkat : 'Baca soalnya pelan-pelan, lalu coret pilihan yang jelas salah.'; }
 
 /* ---------- kerangka layar penuh ---------- */
@@ -155,7 +157,7 @@ function finishOnb() {
   registerCustom(); snapSkor(); save('state', 'log', 'gen');
   UI.tab = 'beranda'; UI.peta = s.fokus; location.hash = 'beranda';
   const tempat = d.tempat && TANGGA[s.fokus].atoms.some((id) => ATOM[id].L);
-  OV = null; renderOv(); renderAll(); askPersist();
+  OV = null; renderOv(); renderAll(); askPersist(); serverTick();
   if (tempat) startTempat(s.fokus);
   else toast(`Selamat datang, ${firstName()}! Anak tangga pertamamu sudah siap.`);
 }
@@ -171,7 +173,8 @@ function buildDemo() {
   const set = (id, lv, lulusAgo, dueIn, rev) => { s.atom[id] = { lvl: lv, rev: rev || 0, due: dueIn == null ? null : addDays(t, dueIn), lulus: lulusAgo == null ? null : addDays(t, -lulusAgo) }; };
   set('pk1', 4, 13, 20, 2); set('pk2', 4, 11, 22, 2); set('pk3', 3, 8, 0, 1); set('pk4', 3, 2, 0, 0); set('pk5', 1);
   set('pu1', 3, 6, 1, 1); set('pu2', 2); set('pbm1', 3, 4, 3, 1);
-  s.ability = { pk: { r: 1085, n: 44 }, pu: { r: 1010, n: 18 }, pbm: { r: 1040, n: 12 }, lbe: { r: 990, n: 3 }, pm: { r: 1000, n: 3 } };
+  /* cukup data di semua subtes, supaya demo menampilkan perkiraan skor yang sudah terbuka */
+  s.ability = { pk: { r: 1085, n: 44 }, pu: { r: 1010, n: 26 }, pbm: { r: 1040, n: 22 }, ppu: { r: 1000, n: 21 }, lbi: { r: 1020, n: 24 }, lbe: { r: 990, n: 20 }, pm: { r: 980, n: 23 } };
   s.self = [
     { d: addDays(t, -20), r: { pu: 2, ppu: 3, pbm: 3, pk: 2, lbi: 3, lbe: 4, pm: 2 } },
     { d: addDays(t, -13), r: { pu: 2, ppu: 3, pbm: 3, pk: 2, lbi: 3, lbe: 4, pm: 2 } },
@@ -253,8 +256,9 @@ function rLesson() {
     body = `<div class="ls-hook"><p class="eyebrow">${x.kode} · anak tangga ${i + 1} dari ${tg.atoms.length}</p><h1 class="ls-title">${esc(a.judul)}</h1>
       <p class="hook">${fmt(L.hook)}</p>
       ${a.pra.length ? `<p class="small mute">Dibangun di atas: ${a.pra.map((p) => `<b>${esc(ATOM[p].judul)}</b>`).join(', ')}</p>` : ''}
-      ${!a.L ? `<p class="note">${icon('spark')} Disusun Kak Tangga (AI) · belum diverifikasi guru. <button class="link" data-act="lapor">Laporkan kesalahan</button></p>` : ''}
-      <ol class="ls-plan">${STEP_NAMES.map((n, j) => `<li><span>${j + 1}</span>${n}</li>`).join('')}</ol></div>`;
+      ${!a.L ? `<p class="note">${icon('spark')} Disusun Kak Tangga (AI) dan belum diperiksa manusia — kalau ada yang aneh, laporkan.</p>` : ''}
+      <ol class="ls-plan">${STEP_NAMES.map((n, j) => `<li><span>${j + 1}</span>${n}</li>`).join('')}</ol>
+      ${laporLink(o.id, 'Ada yang keliru di materi ini?')}</div>`;
     foot = `<button class="btn primary big" data-act="ls-next" data-primary>Mulai</button>`;
   } else if (o.step === 1) {
     const g = o.gaya; const J = L.jelas;
@@ -340,7 +344,7 @@ function rGen() {
     body = `<div class="gen"><h2>Belum berhasil</h2><p>${esc(g.msg || 'Coba lagi sebentar lagi.')}</p></div>`;
     foot = `<button class="btn ghost" data-act="ov-close">Tutup</button><button class="btn primary big" data-act="gen-ulang" data-primary>Coba lagi</button>`;
   } else {
-    body = `<div class="gen"><h2>Anak tangga ini disusun Kak Tangga (AI)</h2><p>${AI.off ? 'Kak Tangga belum diizinkan di tampilan ini.' : 'Kak Tangga aktif saat aplikasi ini dibuka di Claude.'} Sementara itu, coba tangga lain yang materinya sudah siap.</p></div>`;
+    body = `<div class="gen"><h2>Anak tangga ini disusun Kak Tangga (AI)</h2><p>${AI.off ? 'Kak Tangga belum diizinkan di tampilan ini.' : SRV.on ? 'Kak Tangga sedang tidak bisa dihubungi. Cek internetmu, lalu coba lagi.' : 'Kak Tangga belum aktif di versi ini.'} Sementara itu, coba tangga lain yang materinya sudah siap.</p></div>`;
     foot = `<button class="btn primary big" data-act="ov-close" data-primary>Kembali</button>`;
   }
   return ovShell({ title: esc(a.judul), body, foot, cls: 'lesson' });
@@ -363,7 +367,7 @@ function quizSummary(o, extra, minimal) {
   return `<div class="end${n && ok / n >= 0.7 ? ' ok' : ''}"><p class="eyebrow">${esc(o.title)}</p><div class="end-score"><b>${ok}</b><span>/${n} benar</span></div>
     ${minimal ? '' : `<ul class="end-stats"><li><b>${n ? Math.round((ok / n) * 100) : 0}%</b><span>akurasi</span></li><li><b>${Math.round(avg)} dtk</b><span>per soal</span></li><li><b>+${S.xp.total - o.xp0}</b><span>XP</span></li></ul>`}
     ${extra || ''}
-    ${wrong.length ? `<details class="review"><summary>Pembahasan ${wrong.length} soal yang salah</summary>${wrong.map((q) => `<div class="rv"><p>${fmt(q.t)}</p><p>Jawaban: <b>${fmt(q.o[q.k])}</b></p><p class="mute">${fmt(q.b)}</p></div>`).join('')}</details>` : ''}</div>`;
+    ${wrong.length ? `<details class="review"><summary>Pembahasan ${wrong.length} soal yang salah</summary>${wrong.map((q) => `<div class="rv"><p>${fmt(q.t)}</p><p>Jawaban: <b>${fmt(q.o[q.k])}</b></p><p class="mute">${fmt(q.b)}</p>${laporLink(q.id, 'Soal ini keliru?')}</div>`).join('')}</details>` : ''}</div>`;
 }
 function rQuiz() {
   const o = OV;
@@ -405,12 +409,18 @@ function startDrill(s) {
   const opened = all.filter((q) => !q.a || !ATOM[q.a] || lvl(q.a) >= 1 || isOpen(q.a));
   const pool = opened.length >= 4 ? opened : all;
   if (!pool.length) { toast('Belum ada soal untuk subtes ini. Buka anak tangganya di Peta dulu.'); return; }
-  const n = Math.min(drillN(), pool.length); const before = prediksi(s).skor;
+  const n = Math.min(drillN(), pool.length); const before = bulat10(prediksi(s).skor); const wasReady = skorSiap(s);
   closeSheet(true);
   startQuiz({
     mode: 'drill', title: 'Latihan adaptif · ' + subOf(s).kode, s, n, allowHint: true, src: 'latihan',
     next: (o) => (o.res.length >= o.n ? null : pickSweet(pool.filter((q) => !o.used.has(q.id)), s)),
-    end: (o) => { markActive(); snapSkor(); const after = prediksi(s).skor; o.summary = quizSummary(o, `<p class="delta">Perkiraan skor ${subOf(s).kode}: <b>${before} → ${after}</b>${after > before ? ' ▲' : after < before ? ' ▼' : ''}</p>`); },
+    end: (o) => {
+      markActive(); snapSkor(); const after = bulat10(prediksi(s).skor); const kd = subOf(s).kode;
+      const line = wasReady ? `Perkiraan kasar skor ${kd}: <b>≈${before} → ≈${after}</b>${after > before ? ' ▲' : after < before ? ' ▼' : ''}`
+        : skorSiap(s) ? `Perkiraan skor ${kd} sekarang terbuka: <b>≈${after}</b>`
+          : `Perkiraan skor ${kd} terbuka setelah ${SKOR_MIN} soal — sekarang <b>${nJawab(s)}/${SKOR_MIN}</b>.`;
+      o.summary = quizSummary(o, `<p class="delta">${line}</p>`);
+    },
   });
 }
 function startUlasan(only) {
@@ -555,11 +565,11 @@ function rTryout() {
   const o = OV; const n = o.items.length;
   if (o.done) {
     const R = o.result;
-    const body = `<div class="end ok"><p class="eyebrow">Hasil tryout mini</p><div class="end-score"><b>${R.skor}</b><span>estimasi skor</span></div>
-      <ul class="end-stats"><li><b>${R.ok}/${n}</b><span>benar</span></li><li><b>${Math.round(R.dtk)} dtk</b><span>per soal</span></li><li><b>+${S.xp.total - o.xp0}</b><span>XP</span></li></ul>
+    const body = `<div class="end ok"><p class="eyebrow">Hasil tryout mini</p><div class="end-score"><b>${R.ok}</b><span>/${n} benar</span></div>
+      <ul class="end-stats"><li><b>${Math.round((R.ok / n) * 100)}%</b><span>akurasi</span></li><li><b>${Math.round(R.dtk)} dtk</b><span>per soal</span></li><li><b>+${S.xp.total - o.xp0}</b><span>XP</span></li></ul>
       <table class="to-tab"><thead><tr><th scope="col">Subtes</th><th scope="col">Benar</th></tr></thead><tbody>${SUBTES.filter((x) => R.per[x.id]).map((x) => `<tr><td>${subChip(x.id)} ${esc(x.nama)}</td><td>${R.per[x.id].ok}/${R.per[x.id].n}</td></tr>`).join('')}</tbody></table>
-      <p class="small mute">Soal sulit diberi bobot lebih besar, mirip prinsip penilaian UTBK. Ini estimasi, bukan skor resmi.</p>
-      <details class="review"><summary>Pembahasan semua soal</summary>${o.items.map((c, i) => { const q = c.q; const a = o.ans[i]; const y = a != null && c.perm[a] === q.k; return `<div class="rv ${y ? 'ok' : 'no'}"><p><b>${i + 1}.</b> ${fmt(q.t)}</p><p>Jawabanmu: ${a == null ? '<i>kosong</i>' : `<b>${fmt(q.o[c.perm[a]])}</b>`} ${y ? icon('check') : icon('x')}</p>${y ? '' : `<p>Jawaban benar: <b>${fmt(q.o[q.k])}</b></p>`}<p class="mute">${fmt(q.b)}</p></div>`; }).join('')}</details></div>`;
+      <p class="small mute">Tryout mini mengukur latihanmu, bukan skor UTBK. 10 soal terlalu sedikit untuk menebak skor resmi.</p>
+      <details class="review"><summary>Pembahasan semua soal</summary>${o.items.map((c, i) => { const q = c.q; const a = o.ans[i]; const y = a != null && c.perm[a] === q.k; return `<div class="rv ${y ? 'ok' : 'no'}"><p><b>${i + 1}.</b> ${fmt(q.t)}</p><p>Jawabanmu: ${a == null ? '<i>kosong</i>' : `<b>${fmt(q.o[c.perm[a]])}</b>`} ${y ? icon('check') : icon('x')}</p>${y ? '' : `<p>Jawaban benar: <b>${fmt(q.o[q.k])}</b></p>`}<p class="mute">${fmt(q.b)}</p>${laporLink(q.id, 'Soal ini keliru?')}</div>`; }).join('')}</details></div>`;
     return ovShell({ title: 'Tryout mini', body, foot: `<button class="btn primary big" data-act="ov-close" data-primary>Selesai</button>` });
   }
   const cur = o.items[o.i]; const q = cur.q; const x = subOf(q.s); const left = toLeft(); const filled = o.ans.filter((a) => a != null).length;

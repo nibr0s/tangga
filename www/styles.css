@@ -728,3 +728,22 @@ a.btn.primary { color: var(--on-pen); }
 
 .mt-page.end { text-align: center; }
 .mt-page.end .kunci, .mt-page.end .kunci li { text-align: left; }
+
+/* ---------- perkiraan skor terkunci (butuh data dulu) ---------- */
+.score-card.locked .sc-lock { font-weight: 800; font-size: 17px; line-height: 1.3; margin-top: 2px; }
+.score-card.locked .eyebrow .ic { width: 14px; height: 14px; }
+.sc-bars { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
+.sc-bars li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; }
+.sc-bars .sub-chip { min-width: 40px; justify-content: center; }
+@media (max-width: 360px) { .sc-bars { grid-template-columns: 1fr; } }
+
+/* ---------- laporan, Kak Tangga (AI), privasi ---------- */
+.lapor-l { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; margin-top: 4px; font-size: 13px; font-weight: 600; color: var(--ink-2); text-decoration-color: color-mix(in srgb, var(--ink-2) 45%, transparent); }
+.lapor-l .ic { width: 14px; height: 14px; }
+.bubble .lapor-l { font-size: 12px; margin-top: 6px; }
+.ai-note { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: var(--ink-2); padding: 8px 10px; border-radius: 10px; background: var(--paper); border: 1px dashed var(--line); }
+.ai-note .ic { width: 16px; height: 16px; color: var(--pen); flex: none; margin-top: 1px; }
+.ai-rules { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.ai-rules li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; }
+.ai-rules .ic { width: 18px; height: 18px; color: var(--pen); flex: none; margin-top: 2px; }
+.sh-c code, .small code { font-size: 12.5px; padding: 1px 5px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); }
